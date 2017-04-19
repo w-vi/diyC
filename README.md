@@ -26,7 +26,7 @@ Apart from aufs most of the distros are prepared and ready, if not
 please consult your distro package manager.
 
 *Note*: Kernel needs to be configured to support following namespaces
-PID, mount, network, cgroups, UTS . Most of the GNU/Linux distros have
+PID, mount, network and UTS, cgroups are needed as well. Most of the GNU/Linux distros have
 this support enabled by default.
 
 
