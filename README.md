@@ -45,6 +45,8 @@ Builds the runtime.
 
 3. Done
 
+It also builds a `nsexec` which executes a local command in namespaces. See `nsexec --help` to see what namespaces are available. Usage is very simple `sudo ./nsexec -pnu myhost bash` will start a new bash in new pid, network and UTS namespace.
+
 
 ## Preparing images
 
@@ -61,7 +63,7 @@ have the tarball ready.
 
 ### Installing image
 
-`make setup` creates an `image` subdirectory so
+`make setup` creates an `images` subdirectory so
 `mkdir images/myimage` followed by
 `tar -xf myimage.tar -C images/myimage/`
 should do the trick.
