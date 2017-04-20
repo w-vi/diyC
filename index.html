@@ -108,7 +108,11 @@
             <div class="section">
               
                 <h1 id="welcome-to-diyc">Welcome to diyC</h1>
-<p>A simple educational Linux container runtime.</p>
+<p>A simple educational Linux container runtime. It is intentionally
+simple and leaves a lot of stuff out. It is a single C file of roughly
+400 lines showing the core features of the Linux used to build
+containers. It includes also the creation of a container from an image
+to clarify how these work together.</p>
 <h2 id="important-note">Important note</h2>
 <p>It plays with iptables to get the routing and isolation running so if
 you have your own iptables rules make sure to save them before doing
@@ -126,9 +130,11 @@ are the prerequisites:</p>
 <li>make</li>
 <li>bash</li>
 </ul>
-<p>Apart from overlayfs most of the distros are prepared and ready, if not
-please consult your distro package manager. Overlayfs is in the
-mainline kernel so it should be straightforward.</p>
+<p>Apart from overlayfs most of the distros are prepared and ready, if
+not please consult your distro package manager. Overlayfs is in the
+mainline kernel so it should be straightforward. It was merged in
+version 3.18 but has been improved a lot so you should aim for kernel
+4.x.</p>
 <p><em>Note</em>: Kernel needs to be configured to support following namespaces
 PID, mount, network and UTS, cgroups are needed as well. Most of the GNU/Linux distros have
 this support enabled by default.</p>
@@ -157,9 +163,8 @@ want, spin it up by <code>docker run -ti &lt;image&gt; &lt;command&gt;</code> an
 different terminal do <code>docker export &lt;container&gt; &gt; myimage.tar</code>. You
 have the tarball ready.</p>
 <h3 id="installing-image">Installing image</h3>
-<p><code>make setup</code> creates an <code>images</code> subdirectory so
-<code>mkdir images/myimage</code> followed by
-<code>tar -xf myimage.tar -C images/myimage/</code>
+<p><code>make setup</code> creates an <code>images</code> subdirectory so <code>mkdir
+images/myimage</code> followed by <code>tar -xf myimage.tar -C images/myimage/</code>
 should do the trick.</p>
 <p>See <a href="usage/">Usage to run a container</a></p>
               
@@ -208,5 +213,5 @@ should do the trick.</p>
 
 <!--
 MkDocs version : 0.16.3
-Build Date UTC : 2017-04-20 16:21:16
+Build Date UTC : 2017-04-20 19:29:02
 -->

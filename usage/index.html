@@ -102,25 +102,28 @@
             <div class="section">
               
                 <h1 id="usage">Usage</h1>
-<p><code>diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] &lt;NAME&gt; &lt;IMAGE&gt; &lt;CMD&gt;</code></p>
-<pre><code>-h, --help           print the help
+<pre><code>diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] &lt;NAME&gt; &lt;IMAGE&gt; &lt;CMD&gt;
 
--i, --ip             ip address of the container, if not set then host
-                     network is used. It must be in the 172.16.0/16 network
-                     as the bridge diyc0 is 172.16.0.1
+    -h, --help           print the help
 
--m, --mem            maximum size of the memory in MB allowed for the container
-                     by default there no explicit limit defined.
+    -i, --ip             ip address of the container, if not set then host
+                         network is used. It must be in the 172.16.0/16 network
+                         as the bridge diyc0 is 172.16.0.1
 
--v, --verbose        more verbose output
+    -m, --mem            maximum size of the memory in MB allowed for the container
+                         by default there no explicit limit defined.
 
-&lt;NAME&gt;               name of the container, needs to be unique
+    -v, --verbose        more verbose output
 
-&lt;IMAGE&gt;              image to be used for the container, must be a directory name
-                     under the images directory
+    &lt;NAME&gt;               name of the container, needs to be unique
 
-&lt;CMD&gt;                command to be executed inside the container
+    &lt;IMAGE&gt;              image to be used for the container, must be a directory name
+                         under the images directory
+
+    &lt;CMD&gt;                command to be executed inside the container
+
 </code></pre>
+
 <h2 id="example-to-get-a-container-running">Example to get a container running</h2>
 <pre><code class="sh">
 $ git clone git@github.com:w-vi/diyc.git
