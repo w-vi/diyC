@@ -1,0 +1,5 @@
+site_name: diyC
+theme: readthedocs
+pages:
+    - 'Home': 'index.md'
+    - 'Usage': 'usage.md'
