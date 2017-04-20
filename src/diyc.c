@@ -72,7 +72,6 @@ typedef struct container {
     char id[IDLEN]; /* Name of the container */
     int pipe_fd[2];  /* Pipe used to synchronize parent and child */
     char **args;
-    char root[PATH_MAX + 1];
     char path[PATH_MAX + 1]; /*container image directory*/
     char ip[IPLEN + 1];
     char image[IMAGELEN + 1];
@@ -253,7 +252,11 @@ container_exec(void *arg)
     int err = 0;
     char ch;
     container_t *c = (container_t *)arg;
-    char aufs_opts[1024];
+    char ovfs_opts[1024];
+    char upper[512];
+    char work[512];
+    char merged[512];
+
 
     close(c->pipe_fd[1]);    /* Close our descriptor for the write end
                                 of the pipe so that we see EOF when
@@ -265,26 +268,39 @@ container_exec(void *arg)
         die("Failure in child: read from pipe returned != 0\n");
     }
 
-    /* if (unshare(CLONE_NEWNS) < 0) die("unshare issue NEWNS"); */
-
-    if (mkdir(c->path, 0700) < 0 && errno != EEXIST) die("container dir");
-
+    /* remount / as private, on some systems / is shared */
     if (mount("/", "/", "none", MS_PRIVATE | MS_REC, NULL) < 0 ) {
-        die("mount private");
+        die("mount / private");
     }
 
-    LOG("CONTAINER| root on host: %s", c->root);
+    /* Create all the directories needed for overlayFS */
+    /* whats basically happeniing is
 
-    snprintf(aufs_opts, 1023, "br=%s=rw:/home/wvi/src/diyc/images/%s=ro none", c->path, c->image);
-    LOG("CONTAINER| aufs opts: %s", aufs_opts);
+       mount -t overlay overlay -o lowerdir=<image>,\
+       upperdir=containers/<container>/upper,\
+       workdir=containers/<container>/work \
+       containers/<container>/merged
 
-    if (mount("", c->root, "aufs", MS_RELATIME, aufs_opts) < 0) die("mount aufs");
+    */
+    snprintf(upper, 511, "%s/upper", c->path);
+    snprintf(work, 511, "%s/work", c->path);
+    snprintf(merged, 511, "%s/merged", c->path);
+    if (mkdir(c->path, 0700) < 0 && errno != EEXIST) die("container dir");
+    if (mkdir(upper, 0700) < 0 && errno != EEXIST) die("container upper dir");
+    if (mkdir(work, 0700) < 0 && errno != EEXIST) die("container work dir");
+    if (mkdir(merged, 0700) < 0 && errno != EEXIST) die("container merged dir");
 
-    /* if (unshare(CLONE_NEWCGROUP) < 0) die("unshare issue cgroup"); */
+
+    snprintf(ovfs_opts, 1023, "lowerdir=%s/images/%s,upperdir=%s,workdir=%s",cwd, c->image, upper, work);
+    LOG("CONTAINER| overlayfs opts: %s", ovfs_opts);
+
+    LOG("CONTAINER| root on host: %s", merged);
+
+    if (mount("", merged, "overlay", MS_RELATIME, ovfs_opts) < 0) die("mount overlay");
 
     if (umount2("/proc", MNT_DETACH) < 0) die("unmount proc");
 
-    change_root(c->root);
+    change_root(merged);
 
     LOG("CONTAINER| Root changed");
 
@@ -299,7 +315,7 @@ container_exec(void *arg)
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin", 1);
     unsetenv("LC_ALL");
 
-    // set new system info
+    /* set new system info */
     LOG("CONTAINER| Setting hostname %s and domain %s", c->id, domain);
     setdomainname(domain, strlen(domain));
     sethostname(c->id,strlen(c->id));
@@ -341,7 +357,6 @@ main(int argc, char *argv[])
 
     verbose = 0;
     memset(c.ip, 0, IPLEN);
-    snprintf(c.root, PATH_MAX, "/tmp/diyc-XXXXXX");
 
     static const struct option long_opts[] = {
         { "help", no_argument, NULL, 'h' },
@@ -388,10 +403,6 @@ main(int argc, char *argv[])
         create_peer(c.id);
     }
 
-    if (memory) flags |= CLONE_NEWCGROUP;
-
-    if (NULL == mkdtemp(c.root)) die("Container root dir failed.");
-
     pid = clone(container_exec, stack.ptr, flags, &c);
 
     if (pid < 0) die("SYSCALL clone failed.");
@@ -413,8 +424,6 @@ main(int argc, char *argv[])
         waitpid(pid, NULL, 0);
 
     if (memory) rmdir("/sys/fs/cgroup/memory/diyc");
-
-    rmdir(c.root);
 
     LOG("HOST| Container exited");
     return 0;

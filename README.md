@@ -15,15 +15,16 @@ This is a educational piece of software and is not very portable, here
 are the prerequisites:
 
 - recent Linux kernel supporting needed namespaces and cgroups
-- aufs installed
+- overlayfs installed
 - ip tool (iproute2 package)
 - iptables
 - gcc
 - make
 - bash
 
-Apart from aufs most of the distros are prepared and ready, if not
-please consult your distro package manager.
+Apart from overlayfs most of the distros are prepared and ready, if not
+please consult your distro package manager. Overlayfs is in the
+mainline kernel so it should be straightforward.
 
 *Note*: Kernel needs to be configured to support following namespaces
 PID, mount, network and UTS, cgroups are needed as well. Most of the GNU/Linux distros have
@@ -142,7 +143,7 @@ $ mkdir images/debian
 
 $ tar -xf debian.tar -C images/debian/
 
-$ sudo ./diyc -v -m 10 -i 172.16.0.30 my1 debian bash
+$ sudo ./diyc my1 debian bash
 
 > root@my1:/# exit
   exit
