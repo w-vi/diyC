@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  
+  <link rel="shortcut icon" href="../img/favicon.ico">
+  <title>Usage - diyC</title>
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  <link rel="stylesheet" href="../css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../css/theme_extra.css" type="text/css" />
+  <link rel="stylesheet" href="../css/highlight.css">
+  
+  <script>
+    // Current page data
+    var mkdocs_page_name = "Usage";
+    var mkdocs_page_input_path = "usage.md";
+    var mkdocs_page_url = "/usage/";
+  </script>
+  
+  <script src="../js/jquery-2.1.1.min.js"></script>
+  <script src="../js/modernizr-2.8.3.min.js"></script>
+  <script type="text/javascript" src="../js/highlight.pack.js"></script> 
+  
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+      <div class="wy-side-nav-search">
+        <a href=".." class="icon icon-home"> diyC</a>
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+	<ul class="current">
+	  
+          
+            <li class="toctree-l1">
+		
+    <a class="" href="..">Home</a>
+	    </li>
+          
+            <li class="toctree-l1 current">
+		
+    <a class="current" href="./">Usage</a>
+    <ul class="subnav">
+            
+    <li class="toctree-l2"><a href="#usage">Usage</a></li>
+    
+        <ul>
+        
+            <li><a class="toctree-l3" href="#example-to-get-a-container-running">Example to get a container running</a></li>
+        
+        </ul>
+    
+
+    </ul>
+	    </li>
+          
+        </ul>
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="..">diyC</a>
+      </nav>
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="..">Docs</a> &raquo;</li>
+    
+      
+    
+    <li>Usage</li>
+    <li class="wy-breadcrumbs-aside">
+      
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main">
+            <div class="section">
+              
+                <h1 id="usage">Usage</h1>
+<p><code>diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] &lt;NAME&gt; &lt;IMAGE&gt; &lt;CMD&gt;</code></p>
+<pre><code>-h, --help           print the help
+
+-i, --ip             ip address of the container, if not set then host
+                     network is used. It must be in the 172.16.0/16 network
+                     as the bridge diyc0 is 172.16.0.1
+
+-m, --mem            maximum size of the memory in MB allowed for the container
+                     by default there no explicit limit defined.
+
+-v, --verbose        more verbose output
+
+&lt;NAME&gt;               name of the container, needs to be unique
+
+&lt;IMAGE&gt;              image to be used for the container, must be a directory name
+                     under the images directory
+
+&lt;CMD&gt;                command to be executed inside the container
+</code></pre>
+<h2 id="example-to-get-a-container-running">Example to get a container running</h2>
+<pre><code class="sh">
+$ git clone git@github.com:w-vi/diyc.git
+Cloning into 'diyc'...
+remote: Counting objects: 9, done.
+remote: Compressing objects: 100% (8/8), done.
+remote: Total 9 (delta 1), reused 9 (delta 1), pack-reused 0
+Receiving objects: 100% (9/9), 12.95 KiB | 0 bytes/s, done.
+Resolving deltas: 100% (1/1), done.
+
+$ cd diyc
+
+$ make setup
+sudo iptables -A FORWARD -i enp5s0 -o veth -j ACCEPT || true
+sudo iptables -A FORWARD -o enp5s0 -i veth -j ACCEPT || true
+sudo iptables -t nat -A POSTROUTING -s 172.16.0.0/16 -j MASQUERADE || true
+sudo ip link add name diyc0 type bridge || true
+sudo ip addr add dev diyc0 172.16.0.1/24 || true
+sudo ip link set diyc0 up || true
+sudo iptables -A FORWARD -i enp5s0 -o diyc0 -j ACCEPT || true
+sudo iptables -A FORWARD -o enp5s0 -i diyc0 -j ACCEPT || true
+sudo iptables -A FORWARD -o diyc0 -i diyc0 -j ACCEPT || true
+mkdir -p containers
+mkdir -p images
+
+$ make
+gcc -std=c99 -Wall -Werror -O2 src/diyc.c -o diyc
+gcc -std=c99 -Wall -Werror -O2 src/nsexec.c -o nsexec
+
+$ docker pull debian
+Using default tag: latest
+latest: Pulling from library/debian
+Digest: sha256:72f784399fd2719b4cb4e16ef8e369a39dc67f53d978cd3e2e7bf4e502c7b793
+Status: Image is up to date for debian:latest
+
+$ docker run -ti debian /bin/bash
+
+$ docker ps
+CONTAINER ID        IMAGE               COMMAND             CREATED             STATUS              PORTS               NAMES
+2c924241399c        debian              &quot;/bin/bash&quot;         21 seconds ago      Up 20 seconds                           epic_leavitt
+
+$ docker export 2c924241399c &gt;! debian.tar
+
+$ mkdir images/debian
+
+$ tar -xf debian.tar -C images/debian/
+
+$ sudo ./diyc my1 debian bash
+
+&gt; root@my1:/# exit
+  exit
+
+</code></pre>
+              
+            </div>
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href=".." class="btn btn-neutral" title="Home"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+    
+  </div>
+
+  Built with <a href="http://www.mkdocs.org">MkDocs</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+	  
+        </div>
+      </div>
+
+    </section>
+    
+  </div>
+
+  <div class="rst-versions" role="note" style="cursor: pointer">
+    <span class="rst-current-version" data-toggle="rst-current-version">
+      
+      
+        <span><a href=".." style="color: #fcfcfc;">&laquo; Previous</a></span>
+      
+      
+    </span>
+</div>
+    <script src="../js/theme.js"></script>
+
+</body>
+</html>
