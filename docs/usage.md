@@ -1,6 +1,7 @@
 # Usage
 
-`diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] <NAME> <IMAGE> <CMD>`
+```
+    diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] <NAME> <IMAGE> <CMD>
 
     -h, --help           print the help
 
@@ -20,11 +21,11 @@
 
     <CMD>                command to be executed inside the container
 
-
+```
 
 ## Example to get a container running
 
-```sh
+```shell
 
 $ git clone git@github.com:w-vi/diyc.git
 Cloning into 'diyc'...

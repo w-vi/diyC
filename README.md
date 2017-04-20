@@ -1,4 +1,4 @@
-# DIYC
+# diyC
 
 A simple educational Linux container runtime.
 

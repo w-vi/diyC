@@ -3,3 +3,7 @@ theme: readthedocs
 pages:
     - 'Home': 'index.md'
     - 'Usage': 'usage.md'
+repo_url: https://github.com/w-vi/diyc
+repo_name: diyC
+markdown_extensions:
+    - fenced_code

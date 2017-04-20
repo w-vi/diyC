@@ -1,6 +1,10 @@
 # Welcome to diyC
 
-A simple educational Linux container runtime.
+A simple educational Linux container runtime. It is intentionally
+simple and leaves a lot of stuff out. It is a single C file of roughly
+400 lines showing the core features of the Linux used to build
+containers. It includes also the creation of a container from an image
+to clarify how these work together.
 
 ## Important note
 
@@ -22,9 +26,11 @@ are the prerequisites:
 - make
 - bash
 
-Apart from overlayfs most of the distros are prepared and ready, if not
-please consult your distro package manager. Overlayfs is in the
-mainline kernel so it should be straightforward.
+Apart from overlayfs most of the distros are prepared and ready, if
+not please consult your distro package manager. Overlayfs is in the
+mainline kernel so it should be straightforward. It was merged in
+version 3.18 but has been improved a lot so you should aim for kernel
+4.x.
 
 *Note*: Kernel needs to be configured to support following namespaces
 PID, mount, network and UTS, cgroups are needed as well. Most of the GNU/Linux distros have
@@ -64,9 +70,8 @@ have the tarball ready.
 
 ### Installing image
 
-`make setup` creates an `images` subdirectory so
-`mkdir images/myimage` followed by
-`tar -xf myimage.tar -C images/myimage/`
+`make setup` creates an `images` subdirectory so `mkdir
+images/myimage` followed by `tar -xf myimage.tar -C images/myimage/`
 should do the trick.
 
 See [Usage to run a container](usage.md)
