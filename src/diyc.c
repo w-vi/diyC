@@ -71,15 +71,15 @@ static char cwd[PATH_MAX + 1];
 typedef struct container {
     char id[IDLEN]; /* Name of the container */
     int pipe_fd[2];  /* Pipe used to synchronize parent and child */
-    char **args;
-    char path[PATH_MAX + 1]; /*container image directory*/
-    char ip[IPLEN + 1];
-    char image[IMAGELEN + 1];
+    char **args; /* Container command and arguments */
+    char path[PATH_MAX + 1]; /* Container fs directory  $(PWD)/containers/<id>*/
+    char ip[IPLEN + 1]; /*IP address of the container */
+    char image[IMAGELEN + 1]; /* Path of the conatiner image $(PWD)/images/<image> */
 } container_t;
 
 struct clone_stack {
     char stack[4096] __attribute__ ((aligned(16))); /* Stack for the clone call */
-    char ptr[0];
+    char ptr[0]; /* This ppointer actually point to the top of the stack array. */
 };
 
 static void
@@ -143,7 +143,9 @@ copy_file(char *src, char *dst)
 }
 
 
-/* Wrapper for pivot root syscall */
+/* Wrapper for pivot root syscall.
+ * see pivot_root(2)
+ */
 static int
 pivot_root(char *new, char *old)
 {
@@ -160,6 +162,10 @@ pivot_root(char *new, char *old)
     return syscall(SYS_pivot_root, new, old);
 }
 
+/* Change the root and prepare the filesystem for the container, in
+ * this case we just copy resolv.conf from the host so that dns
+ * resolving works in the container.
+ */
 static int
 change_root(char *path)
 {
@@ -175,10 +181,13 @@ change_root(char *path)
 
     if (pivot_root(newroot, oldroot) < 0) die("pivot_root");
 
+    /* Change to new root so we can safely remove the old root*/
     chdir("/");
 
     if (copy_file("/.pivot_root/etc/resolv.conf", "/etc/resolv.conf") < 0) die("copy resolv.conf");
 
+    /* Unmount the old root and remove it so it is not accessible from
+     * the container */
     if (umount2("/.pivot_root", MNT_DETACH) < 0) die("error unmount pivot_root");
 
     if (rmdir("/.pivot_root") < 0) die("rmdir pivot_root");
@@ -186,6 +195,12 @@ change_root(char *path)
     return 0;
 }
 
+/* Setup cgroups for memory limit.
+ * Cgroups are accessed through he /sys/fs/cgroup/<subgroup>
+ * filesystem so we just create a subdir in /sys/fs/cgroup/memory/
+ * which gets then populated by the kernel so we then just write the
+ * desired values.
+ */
 static int
 cgroup_setup(pid_t pid, unsigned int limit)
 {
@@ -195,16 +210,19 @@ cgroup_setup(pid_t pid, unsigned int limit)
 
     if (mkdir("/sys/fs/cgroup/memory/diyc", 0700) < 0 && errno != EEXIST) die("making cgroup");
 
+    /* Maximum allowed memory for the container */
     FILE *fp = fopen("/sys/fs/cgroup/memory/diyc/memory.limit_in_bytes", "w+");
     if (NULL == fp) die("Could not set memory limit");
     fprintf(fp, "%lu", mem);
     fclose(fp);
 
+    /* No swap */
     fp = fopen("/sys/fs/cgroup/memory/diyc/memory.memsw.limit_in_bytes", "w");
     if (NULL == fp) die("Could not set swap limit");
     fprintf(fp, "0");
     fclose(fp);
 
+    /* Add the container pid to the group */
     fp = fopen("/sys/fs/cgroup/memory/diyc/cgroup.procs", "a");
     if (NULL == fp) die("Could not add proc to cgroup.procs");
     fprintf(fp, "%d\n", pid);
@@ -213,12 +231,14 @@ cgroup_setup(pid_t pid, unsigned int limit)
     return 0;
 }
 
-static int
-create_peer(char *id)
+/* Create the veth pair and bring it up.
+ * Using the system() function and ip tool (iproute2 package) to avoid
+ * the netlink code which would have been pretty complex and would
+ * obscure the main parts.
+ */
+static int create_peer(char*id)
 {
-    char *set_int;
-    char *set_int_up;
-    char *add_to_bridge;
+    char *set_int; char *set_int_up; char *add_to_bridge;
 
     asprintf(&set_int, "ip link add veth%s type veth peer name veth1", id);
     system(set_int);
@@ -235,6 +255,10 @@ create_peer(char *id)
     return 0;
 }
 
+/* Move the veth1 device to the childs new netwrok namespace,
+ * effectivelly connecting the parent's and child's namespaces. Again
+ * using just system() to avoid netlink code.
+ */
 static int
 network_setup(pid_t pid)
 {
@@ -246,6 +270,10 @@ network_setup(pid_t pid)
     return 0;
 }
 
+/* Main container function which is responsible to set up the
+ * environmnet for the main container process. This is the function
+ * run by clone(2).
+ */
 static int
 container_exec(void *arg)
 {
@@ -273,15 +301,14 @@ container_exec(void *arg)
         die("mount / private");
     }
 
-    /* Create all the directories needed for overlayFS */
-    /* whats basically happeniing is
+    /* Create all the directories needed for overlayFS
+     * Whats basically happening is:
 
        mount -t overlay overlay -o lowerdir=<image>,\
        upperdir=containers/<container>/upper,\
        workdir=containers/<container>/work \
        containers/<container>/merged
-
-    */
+     */
     snprintf(upper, 511, "%s/upper", c->path);
     snprintf(work, 511, "%s/work", c->path);
     snprintf(merged, 511, "%s/merged", c->path);
@@ -290,7 +317,6 @@ container_exec(void *arg)
     if (mkdir(work, 0700) < 0 && errno != EEXIST) die("container work dir");
     if (mkdir(merged, 0700) < 0 && errno != EEXIST) die("container merged dir");
 
-
     snprintf(ovfs_opts, 1023, "lowerdir=%s/images/%s,upperdir=%s,workdir=%s",cwd, c->image, upper, work);
     LOG("CONTAINER| overlayfs opts: %s", ovfs_opts);
 
@@ -298,28 +324,42 @@ container_exec(void *arg)
 
     if (mount("", merged, "overlay", MS_RELATIME, ovfs_opts) < 0) die("mount overlay");
 
+    /* Unmount old proc as otherwise it'll be still showing all the host info. */
     if (umount2("/proc", MNT_DETACH) < 0) die("unmount proc");
 
     change_root(merged);
 
     LOG("CONTAINER| Root changed");
 
+    /* Mount new /dev, here we can actually create just some subset of
+     * devices, but for the sake of the simplicity just create a new
+     * one.*/
     if (mount("devtmpfs", "/dev", "devtmpfs", MS_NOSUID | MS_RELATIME, NULL) < 0 ) {
         die("mount devtmpfs");
     }
     LOG("CONTAINER| /dev mounted");
 
+    /* Mount new /proc so commands like ps show correct information */
     if (mount("proc", "/proc", "proc", MS_NOSUID | MS_NODEV | MS_NOEXEC | MS_RELATIME, NULL) < 0) die("mount proc");
     LOG("CONTAINER| /proc mounted");
 
+    /* Setting env variables here just to make sure that the shell in
+     * container works correctly, otherwise ther PATH and others ENV
+     * variables are the same as from the parent process. Not really
+     * making any effort here to clean it up, which we otherwise
+     * should.*/
     setenv("PATH", "/bin:/sbin:/usr/bin:/usr/local/sbin:/usr/local/bin", 1);
     unsetenv("LC_ALL");
 
-    /* set new system info */
+    /* Set new system info */
     LOG("CONTAINER| Setting hostname %s and domain %s", c->id, domain);
     setdomainname(domain, strlen(domain));
     sethostname(c->id,strlen(c->id));
 
+    /* If we have an IP address setup the network, assign IP and add
+     * route to the gateway, bridge diyc0 which has by default
+     * 172.16.0.1. Again using ip tool and system() to avoid netlink
+     * code. */
     if (c->ip[0] != '\0') {
         char *ip_cmd;
 
@@ -332,6 +372,7 @@ container_exec(void *arg)
         system("ip route add default via 172.16.0.1");
     }
 
+    /* Ready to execute the container command.*/
     LOG("CONTAINER| Executing command %s", c->args[0]);
 
     err = execvp(c->args[0], c->args);
@@ -367,7 +408,7 @@ main(int argc, char *argv[])
     };
 
     /* The + sign is for getopt to leave the extra arguments alone as
-       they belong to the executed command. see man 3 getopt_long*/
+     * they belong to the executed command. see man 3 getopt_long*/
     while ((opt = getopt_long(argc, argv,"+hvi:m:",
                               long_opts, &long_index )) != -1) {
         switch (opt) {
@@ -390,39 +431,53 @@ main(int argc, char *argv[])
     strncpy(c.image, argv[optind++], IMAGELEN);
     c.args = &argv[optind];
 
+    /* Create a pipe for child parent synchronization some stuff needs
+     * to be done by parent (networking, cgroups) before child can
+     * proceed */
     if (pipe(c.pipe_fd) == -1) die("pipe");
 
     if (NULL == getcwd(cwd, PATH_MAX)) die("getcwd()");
 
+    /* Directory where the container filesystem will reside */
     snprintf(c.path, PATH_MAX, "%s/containers/%s", cwd, c.id);
 
     LOG("HOST| Starting container %s using image %s", c.id, c.image);
 
+    /* If the IP address is provided, we want to run in new network
+     * namespace and create the veth pair.  */
     if (c.ip[0] != '\0')  {
         flags |=  CLONE_NEWNET;
         create_peer(c.id);
     }
 
+    /* Execute the child see clone(2) for more details, but it's
+     * basically fork with namespaces the container is spawned in
+     * container_exec function.*/
     pid = clone(container_exec, stack.ptr, flags, &c);
 
     if (pid < 0) die("SYSCALL clone failed.");
 
     LOG("HOST| Cloned setting up environment");
 
+    /*If we have new network namespace add the veth1 to child's
+     * namespace.*/
     if (c.ip[0] != '\0') {
         LOG("HOST| Network setup");
         network_setup(pid);
     }
 
+    /* If limiting the memory, create the cgroup group and add the child. */
     if (memory) cgroup_setup(pid, memory);
 
     /* Close the write end of the pipe, to signal to the child that we
-       are ready */
+       are ready. */
     close(c.pipe_fd[1]);
 
-    LOG("HOST| Waiting for container to finish.")
-        waitpid(pid, NULL, 0);
+    /* Now we wait for the child/container to finish. */
+    LOG("HOST| Waiting for container to finish.");
+    waitpid(pid, NULL, 0);
 
+    /* We can remove the cgroup if it was created. */
     if (memory) rmdir("/sys/fs/cgroup/memory/diyc");
 
     LOG("HOST| Container exited");
