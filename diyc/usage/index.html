@@ -229,7 +229,7 @@ $ sudo ./diyc -i 172.16.0.31 client debian bash
 root@client:/&gt; apt-get update &amp;&amp; apt-get install curl
 root@client:/&gt; curl http://172.16.0.30:8000
 
-# it is acceessible from the host too
+# it is accessible from the host too
 $ curl http://172.16.0.30:8000
 
 </code></pre>
@@ -237,7 +237,7 @@ $ curl http://172.16.0.30:8000
 <h2 id="removing-exited-containers">Removing exited containers<a class="headerlink" href="#removing-exited-containers" title="Permanent link">#</a></h2>
 <p>Because containers after exit leave their filesystem behind and it is
 not destroyed you can run it again. The data are stored in the
-<code>containers/&lt;name&gt;/</code> directory so as long as this direcotry exists you
+<code>containers/&lt;name&gt;/</code> directory so as long as this directory exists you
 can start and stop the container. To remove it just <code>sudo rm -rf
 containers/&lt;name&gt;</code>.</p>
 <h2 id="removing-the-diyc0-bridge-and-iptables-rules">Removing the diyc0 bridge and iptables rules<a class="headerlink" href="#removing-the-diyc0-bridge-and-iptables-rules" title="Permanent link">#</a></h2>

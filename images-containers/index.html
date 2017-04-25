@@ -142,8 +142,9 @@
 <p>This section covers how the container is created from an image.</p>
 <h2 id="what-is-an-image">What is an image?<a class="headerlink" href="#what-is-an-image" title="Permanent link">#</a></h2>
 <p>Container images are basically <strong>just tarballs</strong> or tarballs of
-tarballs. The tarball contains files and directories a very simple way
-how to inspect it is to export it using docker.</p>
+tarballs. The tarball contains files and directories needed by the
+program running in the container. A very simple way
+how to inspect an image is to export it using docker.</p>
 <ol>
 <li>
 <p>Spin the desired container up, in this case a base debian image.</p>
@@ -217,7 +218,7 @@ $ tar -cf image.tar image
 </li>
 <li>
 <p><a href="https://buildroot.org/">https://buildroot.org/</a> is a toolbox for
-  creating embedded linux systems but you can very easily create a
+  creating embedded Linux systems but you can very easily create a
   custom installation which will be very small. See a
   <a href="https://youtu.be/gMpldbcMHuI?t=419">great talk on this topic from Brian "Redbeard" Harrington</a> from
   <a href="https://coreos.com/">coreOS</a>.</p>
@@ -231,17 +232,17 @@ $ tar -cf image.tar image
 <p>Easy way to verify that the tarball makes sense is to import it to docker
 using <code>docker import tarball.tar</code>.</p>
 <h2 id="how-a-container-is-created-from-an-image">How a container is created from an image?<a class="headerlink" href="#how-a-container-is-created-from-an-image" title="Permanent link">#</a></h2>
-<p>The main magic is layers becaue containers are
+<p>The main magic is layers because containers are
 like <a href="https://www.youtube.com/watch?v=_bMcXVe8zIs">Ogres</a>. The
 container's filesystem is usually made of at least two layers many
 times there are more layers involved but that doesn't change the core
-concept where one layer is the image and the other is a writeable
+concept where one layer is the image and the other is a writable
 temporary directory for the container to write files so that the image
-remains immutable. To achieve such behaviour you need a so
+remains immutable. To achieve such behavior you need a so
 called <a href="https://en.wikipedia.org/wiki/Union_mount">union mount</a> which
 basically mounts a new filesystem combining two or more
 directories/filesystems together into one.</p>
-<p><img alt="Unioning filesytem simplified" src="../img/unionfs.png" /></p>
+<p><img alt="Unioning filesystem simplified" src="../img/unionfs.png" /></p>
 <p><em>Above: Simplified unioning filesystem scheme</em></p>
 <p>Such a unified filesystem is then mounted under some temp working directory
 and in the container it is changed to be the root
@@ -256,7 +257,7 @@ copy some configuration files to the new root.</p>
 <p class="admonition-title">Code</p>
 <p>See the implementation in <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L304-L330">diy.c:304-330</a></p>
 </div>
-<p>Very similar behaviour is also possible using completely different
+<p>Very similar behavior is also possible using completely different
 approaches, i.e utilizing subvolumes and snapshots
 of <a href="https://en.wikipedia.org/wiki/Btrfs">btrfs</a> or
 using <a href="https://en.wikipedia.org/wiki/Device_mapper">devicemapper</a>. Docker
@@ -272,7 +273,7 @@ details is out of the scope but the main ones are :</p>
 <li><a href="http://aufs.sourceforge.net/">aufs</a></li>
 <li><a href="https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt">overlayFS</a></li>
 </ul>
-<p>Today the easisest option is to use overlayfs filesystem because it
+<p>Today the easiest option is to use overlayfs filesystem because it
 was merged to mainline kernel in version 3.18. It is actually called
 overlay since the merge. To check if you are able to use it see
 <code>/proc/filesystems</code> file (<a href="http://man7.org/linux/man-pages/man5/fs.5.html">man 5 filesystems</a>).</p>
@@ -283,7 +284,7 @@ it is loaded only if it is used so try <code>modprobe overlay</code> to load the
 </div>
 <h2 id="using-overlay-filesystem">Using overlay filesystem<a class="headerlink" href="#using-overlay-filesystem" title="Permanent link">#</a></h2>
 <p>In the overlayfs there are two layers, <code>lowerdir</code> which is
-always read only and <code>upperdir</code> which is writeable. You can actually have
+always read only and <code>upperdir</code> which is writable. You can actually have
 more <code>lowerdir</code> directories which are all read only as any changes are
 always stored in the <code>upperdir</code>. It can be used in many ways
 (i.e. Live CDs) and is not specific to containers.</p>
@@ -295,7 +296,7 @@ always stored in the <code>upperdir</code>. It can be used in many ways
 <div class="admonition note">
 <p class="admonition-title">workdir</p>
 <p>The <code>workdir</code> parameter must be on the same filesystem as the
-<code>uppperdir</code> directory and it is used for certain atomic
+<code>upperdir</code> directory and it is used for certain atomic
 operations. <code>lowerdir</code> can be on a different filesystem though.</p>
 </div>
 <pre><code class="bash"># In tmp create the needed directory structure
@@ -328,12 +329,12 @@ the <code>lower</code>, <code>upper</code> and  <code>merged</code> you can obse
   file was originally in <code>lower</code>, the file is <em>copied up</em>.</p>
 </li>
 <li>
-<p>Deleteing a file or directory in <code>merged</code> that was in the <code>lower</code>,
+<p>Deleting a file or directory in <code>merged</code> that was in the <code>lower</code>,
   removes it from merged but not <code>lower</code>. It creates a so called
   "whiteout" file/directory in the <code>upper</code>.</p>
 </li>
 </ul>
-<p>Conatiner filesystem is created in the same fashion, image is the
+<p>Container filesystem is created in the same fashion, image is the
 <code>lowerdir</code> and container specific files are in the <code>upperdir</code>. Inside the
 container you see the <code>merged</code>.</p>
 <h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
