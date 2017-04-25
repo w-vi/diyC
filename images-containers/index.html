@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Images and containers - Linux containers from scratch - diyC</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+        <link href="../extra.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Linux containers from scratch - diyC</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">diyC <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../diyc/install/">Installation</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../diyc/usage/">Running conatiners</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="active">
+                    <a href="./">Images and containers</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="../diyc/usage/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li class="disabled">
+                    <a rel="prev" >
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/w-vi/diyC">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#images-and-containers">Images and Containers</a></li>
+        
+            <li><a href="#what-is-an-image">What is an image?</a></li>
+        
+            <li><a href="#how-a-container-is-created-from-an-image">How a container is created from an image?</a></li>
+        
+            <li><a href="#unioning-filesystems-in-linux">Unioning filesystems in Linux</a></li>
+        
+            <li><a href="#using-overlay-filesystem">Using overlay filesystem</a></li>
+        
+            <li><a href="#more-to-read">More to read</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="images-and-containers">Images and Containers<a class="headerlink" href="#images-and-containers" title="Permanent link">#</a></h1>
+<p>This section covers how the container is created from an image.</p>
+<h2 id="what-is-an-image">What is an image?<a class="headerlink" href="#what-is-an-image" title="Permanent link">#</a></h2>
+<p>Container images are basically <strong>just tarballs</strong> or tarballs of
+tarballs. The tarball contains files and directories a very simple way
+how to inspect it is to export it using docker.</p>
+<ol>
+<li>
+<p>Spin the desired container up, in this case a base debian image.</p>
+<pre><code>$ docker run -ti debian bash
+</code></pre>
+</li>
+<li>
+<p>In other terminal, find the container and export it.</p>
+<pre><code>$ docker ps
+CONTAINER ID        IMAGE               COMMAND
+f222a193be90        debian              "bash"
+
+$ docker export f222a193be90 &gt; deian.tar
+</code></pre>
+</li>
+<li>
+<p>Stop the container</p>
+<pre><code>root@f222a193be90:/&gt; exit
+</code></pre>
+</li>
+<li>
+<p>Untar the image into directory.</p>
+<pre><code>$ mkdir debain-image
+$ tar -xf debian.tar -C debian-image
+</code></pre>
+</li>
+<li>
+<p>Inspect what's inside. It looks like a usual GNU/Linux filesystem layout.</p>
+<pre><code>$ ls -la debian-image
+total 92
+drwxr-xr-x  21 wvi wvi  4096 23.04.2017 11:07 ./
+drwxrwxrwx 113 wvi wvi 12288 23.04.2017 11:07 ../
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:29 bin/
+drwxr-xr-x   2 wvi wvi  4096 28.12.2016 18:42 boot/
+drwxr-xr-x   4 wvi wvi  4096 23.04.2017 11:00 dev/
+drwxr-xr-x  41 wvi wvi  4096 23.04.2017 11:00 etc/
+drwxr-xr-x   2 wvi wvi  4096 28.12.2016 18:42 home/
+drwxr-xr-x   9 wvi wvi  4096 27.11.2014 20:59 lib/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:27 lib64/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:26 media/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:26 mnt/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:26 opt/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:29 proc/
+drwx------   2 wvi wvi  4096 21.03.2017 00:26 root/
+drwxr-xr-x   3 wvi wvi  4096 21.03.2017 00:26 run/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:29 sbin/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:26 srv/
+drwxr-xr-x   2 wvi wvi  4096 06.04.2015 20:44 sys/
+drwxr-xr-x   2 wvi wvi  4096 21.03.2017 00:29 tmp/
+drwxr-xr-x  10 wvi wvi  4096 21.03.2017 00:26 usr/
+drwxr-xr-x  11 wvi wvi  4096 21.03.2017 00:26 var/
+-rwxr-xr-x   1 wvi wvi     0 23.04.2017 11:00 .dockerenv*
+</code></pre>
+</li>
+</ol>
+<h3 id="creating-the-image">Creating the image<a class="headerlink" href="#creating-the-image" title="Permanent link">#</a></h3>
+<p>To create an image for the diyC the easiest is to <a href="../diyc/usage/#example-get-a-container-running">export the docker
+image</a>.</p>
+<p>Generally for containers there are many other ways how to create an
+image but it is out of scope of this project so here is just a few
+pointers.</p>
+<ul>
+<li>
+<p>Statically linked programs where you need just that one binary
+  nothing else so something along those lines should suffice. That's
+  for example what you can do with <a href="https://golang.org/">Go programs</a>.</p>
+<pre><code>$ mkdir image
+$ cp &lt;my-statically-linked-binary&gt; image
+$ tar -cf image.tar image
+</code></pre>
+</li>
+<li>
+<p><a href="https://buildroot.org/">https://buildroot.org/</a> is a toolbox for
+  creating embedded linux systems but you can very easily create a
+  custom installation which will be very small. See a
+  <a href="https://youtu.be/gMpldbcMHuI?t=419">great talk on this topic from Brian "Redbeard" Harrington</a> from
+  <a href="https://coreos.com/">coreOS</a>.</p>
+</li>
+<li>
+<p>Get your filesystem layout and copy files needed. you can use
+  package managers like <code>dnf</code>, <code>yum</code>, <code>debootsrap</code> etc. and tar the
+  structure up.</p>
+</li>
+</ul>
+<p>Easy way to verify that the tarball makes sense is to import it to docker
+using <code>docker import tarball.tar</code>.</p>
+<h2 id="how-a-container-is-created-from-an-image">How a container is created from an image?<a class="headerlink" href="#how-a-container-is-created-from-an-image" title="Permanent link">#</a></h2>
+<p>The main magic is layers becaue containers are
+like <a href="https://www.youtube.com/watch?v=_bMcXVe8zIs">Ogres</a>. The
+container's filesystem is usually made of at least two layers many
+times there are more layers involved but that doesn't change the core
+concept where one layer is the image and the other is a writeable
+temporary directory for the container to write files so that the image
+remains immutable. To achieve such behaviour you need a so
+called <a href="https://en.wikipedia.org/wiki/Union_mount">union mount</a> which
+basically mounts a new filesystem combining two or more
+directories/filesystems together into one.</p>
+<p><img alt="Unioning filesytem simplified" src="../img/unionfs.png" /></p>
+<p><em>Above: Simplified unioning filesystem scheme</em></p>
+<p>Such a unified filesystem is then mounted under some temp working directory
+and in the container it is changed to be the root
+filesystem using the
+<a href="http://man7.org/linux/man-pages/man2/pivot_root.2.html">pivot_root syscall</a>.
+<a href="http://man7.org/linux/man-pages/man2/pivot_root.2.html">pivot_root</a>
+is almost like
+a <a href="http://man7.org/linux/man-pages/man2/chroot.2.html">chroot</a> but you
+get to keep access to the original old root so you can for example
+copy some configuration files to the new root.</p>
+<div class="admonition seealso">
+<p class="admonition-title">Code</p>
+<p>See the implementation in <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L304-L330">diy.c:304-330</a></p>
+</div>
+<p>Very similar behaviour is also possible using completely different
+approaches, i.e utilizing subvolumes and snapshots
+of <a href="https://en.wikipedia.org/wiki/Btrfs">btrfs</a> or
+using <a href="https://en.wikipedia.org/wiki/Device_mapper">devicemapper</a>. Docker
+uses devicemapper approach on many systems by default and has a very
+good description of the 
+<a href="https://docs.docker.com/engine/userguide/storagedriver/device-mapper-driver/">devicemapper approach</a>.</p>
+<h2 id="unioning-filesystems-in-linux">Unioning filesystems in Linux<a class="headerlink" href="#unioning-filesystems-in-linux" title="Permanent link">#</a></h2>
+<p>Historically there were couple of options on Linux but only one of
+them ended up in the mainline kernel. Describing the history and
+details is out of the scope but the main ones are :</p>
+<ul>
+<li><a href="http://unionfs.filesystems.org/">UnionFS</a></li>
+<li><a href="http://aufs.sourceforge.net/">aufs</a></li>
+<li><a href="https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt">overlayFS</a></li>
+</ul>
+<p>Today the easisest option is to use overlayfs filesystem because it
+was merged to mainline kernel in version 3.18. It is actually called
+overlay since the merge. To check if you are able to use it see
+<code>/proc/filesystems</code> file (<a href="http://man7.org/linux/man-pages/man5/fs.5.html">man 5 filesystems</a>).</p>
+<div class="admonition note">
+<p class="admonition-title">overlay kernel module</p>
+<p>Very often it does not show up in the <code>/proc/filesystems</code> because
+it is loaded only if it is used so try <code>modprobe overlay</code> to load the kernel module.</p>
+</div>
+<h2 id="using-overlay-filesystem">Using overlay filesystem<a class="headerlink" href="#using-overlay-filesystem" title="Permanent link">#</a></h2>
+<p>In the overlayfs there are two layers, <code>lowerdir</code> which is
+always read only and <code>upperdir</code> which is writeable. You can actually have
+more <code>lowerdir</code> directories which are all read only as any changes are
+always stored in the <code>upperdir</code>. It can be used in many ways
+(i.e. Live CDs) and is not specific to containers.</p>
+<p>You can give it a try yourself easily from a command line.</p>
+<p>Overlay <a href="http://man7.org/linux/man-pages/man8/mount.8.html">mount(8)</a> options.</p>
+<pre><code class="bash"># mount -t overlay overlay -o lowerdir=/lower1:/lower2,upperdir=/upper,workdir=/work /merged
+</code></pre>
+
+<div class="admonition note">
+<p class="admonition-title">workdir</p>
+<p>The <code>workdir</code> parameter must be on the same filesystem as the
+<code>uppperdir</code> directory and it is used for certain atomic
+operations. <code>lowerdir</code> can be on a different filesystem though.</p>
+</div>
+<pre><code class="bash"># In tmp create the needed directory structure
+$ mkdir /tmp/lower /tmp/upper /tmp/workdir /tmp/merged
+# and mount an overlay fs
+$ sudo mount -t overlay -o \
+  lowerdir=/tmp/lower,\
+  upperdir=/tmp/upper,\
+  workdir=/tmp/workdir \
+  none /tmp/merged
+</code></pre>
+
+<p>If you play around creating/writing/deleting files and directories in
+the <code>lower</code>, <code>upper</code> and  <code>merged</code> you can observe the following.</p>
+<h3 id="observations">Observations<a class="headerlink" href="#observations" title="Permanent link">#</a></h3>
+<ul>
+<li>
+<p>If there are directories in both <code>lower</code> and <code>upper</code> their content
+  is merged.</p>
+</li>
+<li>
+<p>Files created in the <code>lower</code> or <code>upper</code> directory are visible in the
+  <code>merged</code>.</p>
+</li>
+<li>
+<p>Any files created in the merged are actually created in the <code>upper</code>.</p>
+</li>
+<li>
+<p>Writing to existing files appears again only in <code>upper</code> even if the
+  file was originally in <code>lower</code>, the file is <em>copied up</em>.</p>
+</li>
+<li>
+<p>Deleteing a file or directory in <code>merged</code> that was in the <code>lower</code>,
+  removes it from merged but not <code>lower</code>. It creates a so called
+  "whiteout" file/directory in the <code>upper</code>.</p>
+</li>
+</ul>
+<p>Conatiner filesystem is created in the same fashion, image is the
+<code>lowerdir</code> and container specific files are in the <code>upperdir</code>. Inside the
+container you see the <code>merged</code>.</p>
+<h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
+<ul>
+<li><a href="https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt">Overlay documentation in kernel</a></li>
+<li><a href="https://docs.docker.com/engine/userguide/storagedriver/overlayfs-driver/">Docker and OverlayFS in practice</a></li>
+<li><a href="https://docs.docker.com/engine/userguide/storagedriver/device-mapper-driver/">Docker and the Device Mapper storage driver</a></li>
+<li><a href="https://lwn.net/Articles/324291/">Unioning file systems: Architecture, features, and design choices</a></li>
+<li><a href="https://lwn.net/Articles/325369/">Union file systems: Implementations, part I</a></li>
+<li><a href="https://lwn.net/Articles/327738/">Unioning file systems: Implementations, part 2</a></li>
+<li><a href="https://lwn.net/Articles/403012/">Another union filesystem approach</a></li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

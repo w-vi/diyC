@@ -15,6 +15,7 @@
         <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
         <link rel="stylesheet" href="./css/highlight.css">
         <link href="./css/base.css" rel="stylesheet">
+        <link href="./extra.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -56,8 +57,29 @@
             
             
             
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">diyC <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="diyc/install/">Installation</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="diyc/usage/">Running conatiners</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
                 <li >
-                    <a href="usage/">Usage</a>
+                    <a href="images-containers/">Images and containers</a>
                 </li>
             
             
@@ -76,7 +98,7 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="usage/">
+                    <a rel="prev" href="diyc/install/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -101,17 +123,13 @@
     
         <li class="main active"><a href="#linux-containers-from-scratch-diyc">Linux containers from scratch - diyC</a></li>
         
+            <li><a href="#what-is-a-linux-container">What is a Linux container</a></li>
+        
+            <li><a href="#kernel-features-and-other-bits-needed">Kernel features and other bits needed</a></li>
+        
             <li><a href="#what-is-diyc">What is diyC</a></li>
         
-            <li><a href="#important-note">Important note</a></li>
-        
-            <li><a href="#prerequisites">Prerequisites</a></li>
-        
-            <li><a href="#installation">Installation</a></li>
-        
             <li><a href="#nsexec">nsexec</a></li>
-        
-            <li><a href="#preparing-images">Preparing images</a></li>
         
     
     </ul>
@@ -120,78 +138,47 @@
 
 <h1 id="linux-containers-from-scratch-diyc">Linux containers from scratch - diyC<a class="headerlink" href="#linux-containers-from-scratch-diyc" title="Permanent link">#</a></h1>
 <p>Linux containers exist for a while and are now a mainstream
-topic. This is an introduction on how their are created and what they
+topic. This is an introduction on how they are created and what they
 actually are made of. If you want to see the code then head directly
 to <a href="https://github.com/w-vi/diyc">the github repo</a> otherwise read on
 the topic you are interested in.</p>
-<p><em>Note</em>: Any suggestions or comments are welcome please don't hesitate
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Any suggestions or comments are welcome please don't hesitate
 and <a href="https://github.com/w-vi/diyc/issues/new">file an issue on github</a>.</p>
+</div>
+<h2 id="what-is-a-linux-container">What is a Linux container<a class="headerlink" href="#what-is-a-linux-container" title="Permanent link">#</a></h2>
+<p>Containers in some form exist for quite while even though <a href="http://www.networkworld.com/article/2226996/cisco-subnet/software-containers--used-more-frequently-than-most-realize.html">we don't
+allways think of them as containers</a>. </p>
+<blockquote>
+<p>Linux container to put it simply it is a usuall Linux process (or
+group of processes) with a limited (altered) view of the system.</p>
+</blockquote>
+<p>It is achieved by utilizing
+<a href="https://en.wikipedia.org/wiki/Operating-system-level_virtualization">Operating system level virtualization</a>.</p>
+<h2 id="kernel-features-and-other-bits-needed">Kernel features and other bits needed<a class="headerlink" href="#kernel-features-and-other-bits-needed" title="Permanent link">#</a></h2>
+<ul>
+<li><a href="namespaces.md">Linux namespaces</a></li>
+<li><a href="cgroups.md">Linux cgroups</a></li>
+<li><a href="cgroups.md">Networking</a></li>
+<li><a href="images-containers/">Images and containers</a></li>
+<li><a href="container-code.md">Glueing it together</a></li>
+</ul>
 <h2 id="what-is-diyc">What is diyC<a class="headerlink" href="#what-is-diyc" title="Permanent link">#</a></h2>
 <p>It is a simple educational Linux container runtime. It is
-intentionally simple and leaves a lot of stuff out. It is a single C
-file of roughly 500 lines including comments showing the core features
-of the Linux used to build containers. It includes also the creation
-of a container from an image to clarify how images and containers are
+intentionally simple and leaves a lot of stuff out. It is
+a <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c">single C file</a>
+of roughly 500 lines including comments showing the core features of
+the Linux used to build containers. It includes also the creation of a
+container from an image to clarify how images and containers are
 related.</p>
-<h2 id="important-note">Important note<a class="headerlink" href="#important-note" title="Permanent link">#</a></h2>
-<p>It plays with iptables to get the routing and isolation running so if
-you have your own iptables rules make sure to save them before doing
-anything else <code>sudo iptables-save</code> and <code>sudo iptables-restore</code> to
-recover them in case something goes awry.</p>
-<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">#</a></h2>
-<p>This is a educational piece of software and has not been tested on
-many systems yet, to give it a go make sure you have the following:</p>
-<ul>
-<li>recent Linux kernel supporting needed namespaces and cgroups</li>
-<li>overlayfs </li>
-<li>ip tool (iproute2 package)</li>
-<li>iptables</li>
-<li>gcc</li>
-<li>make</li>
-<li>bash</li>
-</ul>
-<p>Apart from overlayfs most of the distros are prepared and ready, if
-not please consult your distro package manager. Overlayfs is in the
-mainline kernel so it should be straightforward. It was merged in
-version 3.18 but has been improved a lot so you should aim for kernel
-4.x.</p>
-<p><em>Note</em>: Kernel needs to be configured to support following namespaces
-PID, mount, network and UTS, cgroups are needed as well. Most of the
-GNU/Linux distros have this support enabled by default.</p>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
-<ol>
-<li><code>make setup</code></li>
-</ol>
-<p>It creates the necessary directory structure as well as prepares the
-networking part like iptables rules, bridge (diyc0) and so on. To
-remove the networking bits like bridge and iptables rules run <code>make
-net-clean</code> which removes them all.</p>
-<ol>
-<li><code>make</code></li>
-</ol>
-<p>Builds the runtime.</p>
-<ol>
-<li>Done</li>
-</ol>
 <h2 id="nsexec">nsexec<a class="headerlink" href="#nsexec" title="Permanent link">#</a></h2>
-<p>The above steps also build a <code>nsexec</code> binary which is is a very
-simple program that executes a local (host) command in namespaces. See
-<code>nsexec --help</code> to see what namespaces are available. Usage is very
-simple <code>sudo ./nsexec -pnu myhost bash</code> will start a new bash in new
-pid, network and UTS namespace.</p>
-<h2 id="preparing-images">Preparing images<a class="headerlink" href="#preparing-images" title="Permanent link">#</a></h2>
-<p>The image import and creation is not present but because images are
-just <strong>TARBALLS</strong> there is no need for anything fancy.</p>
-<h3 id="creating-the-tarball-using-docker">Creating the tarball using docker<a class="headerlink" href="#creating-the-tarball-using-docker" title="Permanent link">#</a></h3>
-<p>Using docker is the most straightforward. <code>docker pull</code> the image you
-want, spin it up by <code>docker run -ti &lt;image&gt; &lt;command&gt;</code> and in
-different terminal do <code>docker export &lt;container&gt; &gt; myimage.tar</code>. You
-have the tarball ready.</p>
-<h3 id="installing-image">Installing image<a class="headerlink" href="#installing-image" title="Permanent link">#</a></h3>
-<p><code>make setup</code> creates an <code>images</code> subdirectory so <code>mkdir
-images/myimage</code> followed by <code>tar -xf myimage.tar -C images/myimage/</code>
-should do the trick.</p>
-<p>See <a href="usage/">how to run a container</a>.</p></div>
+<p>Part of the project is also
+a <a href="https://github.com/w-vi/diyC/blob/master/src/nsexec.c"><code>nsexec</code> binary</a> 
+which is is a very simple program that executes a local (host) command
+in Linux namespaces. See <code>nsexec --help</code> to see what namespaces are
+available. Usage is very simple <code>sudo ./nsexec -pnu myhost bash</code> will
+start a new bash in new pid, network and UTS namespace.</p></div>
         </div>
 
         <footer class="col-md-12">

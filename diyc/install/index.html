@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../../img/favicon.ico">
+
+	<title>Installation - Linux containers from scratch - diyC</title>
+
+        <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../../css/highlight.css">
+        <link href="../../css/base.css" rel="stylesheet">
+        <link href="../../extra.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="../..">Linux containers from scratch - diyC</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="../..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">diyC <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li class="active">
+    <a href="./">Installation</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../usage/">Running conatiners</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="../../images-containers/">Images and containers</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="../..">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../usage/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/w-vi/diyC">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#getting-started">Getting started</a></li>
+        
+            <li><a href="#prerequisites">Prerequisites</a></li>
+        
+            <li><a href="#installation">Installation</a></li>
+        
+            <li><a href="#preparing-images">Preparing images</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="getting-started">Getting started<a class="headerlink" href="#getting-started" title="Permanent link">#</a></h1>
+<div class="admonition danger">
+<p class="admonition-title">iptables</p>
+<p>diyC plays with iptables to get the routing and isolation running so if
+you have your own iptables rules make sure to save them before doing
+anything else. Just <code>sudo iptables-save</code> and <code>sudo iptables-restore</code> to
+recover them in case something goes awry.</p>
+</div>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">#</a></h2>
+<p>This is a educational piece of software and has not been tested on
+many systems yet, to give it a go make sure you have the following:</p>
+<ul>
+<li>recent Linux kernel supporting needed namespaces and cgroups</li>
+<li>overlayfs </li>
+<li>ip tool (<a href="https://wiki.linuxfoundation.org/networking/iproute2">iproute2 package</a>)</li>
+<li>iptables </li>
+<li>gcc</li>
+<li>make</li>
+<li>bash</li>
+</ul>
+<p>Overlayfs is in the mainline kernel so it everything should be
+straight forward it was merged in version 3.18 but has been improved a
+lot so you should aim for kernel 4.x and in that case you have all the
+namespaces and cgroups too.</p>
+<div class="admonition note">
+<p class="admonition-title">Kernel configuration</p>
+<p>Kernel needs to be configured to support following namespaces
+PID, mount, network and UTS, cgroups are needed as well. Most of the
+GNU/Linux distros have this support enabled by default.</p>
+</div>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">#</a></h2>
+<ol>
+<li>
+<p><code>make setup</code></p>
+<p>It creates the necessary directory structure as well as prepares the
+networking part like iptables rules, bridge (diyc0) and so on. To
+remove the networking bits like bridge and iptables rules run <code>make
+net-clean</code> which removes them all.</p>
+</li>
+<li>
+<p><code>make</code></p>
+<p>Builds the runtime.</p>
+</li>
+<li>
+<p>Done</p>
+</li>
+</ol>
+<h2 id="preparing-images">Preparing images<a class="headerlink" href="#preparing-images" title="Permanent link">#</a></h2>
+<p>The image import and creation is not present but because images are
+just <strong>TARBALLS</strong> there is no need for anything fancy.</p>
+<h3 id="creating-the-tarball-using-docker">Creating the tarball using docker<a class="headerlink" href="#creating-the-tarball-using-docker" title="Permanent link">#</a></h3>
+<p>Using docker is the most straightforward. <code>docker pull</code> the image you
+want, spin it up by <code>docker run -ti &lt;image&gt; &lt;command&gt;</code> and in
+different terminal do <code>docker export &lt;container&gt; &gt; myimage.tar</code>. You
+have the tarball ready.</p>
+<h3 id="installing-image">Installing image<a class="headerlink" href="#installing-image" title="Permanent link">#</a></h3>
+<p><code>make setup</code> creates an <code>images</code> subdirectory so <code>mkdir
+images/myimage</code> followed by <code>tar -xf myimage.tar -C images/myimage/</code>
+should do the trick. The relation of images and containers is
+described in a section of it's
+own. <a href="../../images-containers/">Images and Containers</a>.</p>
+<div class="admonition sealso">
+<p class="admonition-title">Example</p>
+<p>See <a href="diyc/usage.md">how to run a container</a></p>
+</div></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../../js/jquery-1.10.2.min.js"></script>
+        <script src="../../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../../js/highlight.pack.js"></script>
+        <script>var base_url = '../..';</script>
+        <script data-main="../../mkdocs/js/search.js" src="../../mkdocs/js/require.js"></script>
+        <script src="../../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
