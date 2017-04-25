@@ -1,77 +1,48 @@
-# Welcome to diyC
+# Linux containers from scratch - diyC
 
-A simple educational Linux container runtime. It is intentionally
-simple and leaves a lot of stuff out. It is a single C file of roughly
-400 lines showing the core features of the Linux used to build
-containers. It includes also the creation of a container from an image
-to clarify how these work together.
+Linux containers exist for a while and are now a mainstream
+topic. This is an introduction on how they are created and what they
+actually are made of. If you want to see the code then head directly
+to [the GitHub repo](https://github.com/w-vi/diyc) otherwise read on
+the topic you are interested in.
 
-## Important note
-
-It plays with iptables to get the routing and isolation running so if
-you have your own iptables rules make sure to save them before doing
-anything else `sudo iptables-save` and `sudo iptables-restore` to
-recover them in case something goes awry.
-
-## Prerequisites
-
-This is a educational piece of software and is not very portable, here
-are the prerequisites:
-
-- recent Linux kernel supporting needed namespaces and cgroups
-- overlayfs installed
-- ip tool (iproute2 package)
-- iptables
-- gcc
-- make
-- bash
-
-Apart from overlayfs most of the distros are prepared and ready, if
-not please consult your distro package manager. Overlayfs is in the
-mainline kernel so it should be straightforward. It was merged in
-version 3.18 but has been improved a lot so you should aim for kernel
-4.x.
-
-*Note*: Kernel needs to be configured to support following namespaces
-PID, mount, network and UTS, cgroups are needed as well. Most of the GNU/Linux distros have
-this support enabled by default.
+!!! note 
+    Any suggestions or comments are welcome please don't hesitate
+    and [file an issue on GitHub](https://github.com/w-vi/diyc/issues/new).
 
 
-## Installation
+## What is a Linux container
 
-1. `make setup`
+Containers in some form exist for quite while even though [we don't
+always think of them as containers](http://www.networkworld.com/article/2226996/cisco-subnet/software-containers--used-more-frequently-than-most-realize.html). 
 
-It creates the necessary directory structure as well as prepares the
-networking part like iptables rules, bridge (diyc0) and so on. To
-remove the networking bits like bridge and iptables rules run `make
-net-clean` which removes them all.
+> Linux container to put it simply it is a usual Linux process (or
+> group of processes) with a limited (altered) view of the system.
 
-2. `make`
-
-Builds the runtime.
-
-3. Done
-
-It also builds a `nsexec` which executes a local command in namespaces. See `nsexec --help` to see what namespaces are available. Usage is very simple `sudo ./nsexec -pnu myhost bash` will start a new bash in new pid, network and UTS namespace.
+It is achieved by utilizing
+[Operating system level virtualization](https://en.wikipedia.org/wiki/Operating-system-level_virtualization).
 
 
-## Preparing images
+## Kernel features and other bits needed
 
-The image import and creation is not present but because images are
-just **TARBALLS** there is no need for anything fancy.
+- [Images and containers](images-containers.md)
 
 
-### Creating the tarball using docker
+## What is diyC
 
-Using docker is the most straightforward. `docker pull` the image you
-want, spin it up by `docker run -ti <image> <command>` and in
-different terminal do `docker export <container> > myimage.tar`. You
-have the tarball ready.
+It is a simple educational Linux container runtime. It is
+intentionally simple and leaves a lot of stuff out. It is
+a [single C file](https://github.com/w-vi/diyC/blob/master/src/diyc.c)
+of roughly 500 lines including comments showing the core features of
+the Linux used to build containers. It includes also the creation of a
+container from an image to clarify how images and containers are
+related.
 
-### Installing image
+## nsexec
 
-`make setup` creates an `images` subdirectory so `mkdir
-images/myimage` followed by `tar -xf myimage.tar -C images/myimage/`
-should do the trick.
-
-See [Usage to run a container](usage.md)
+Part of the project is also
+a [`nsexec` binary](https://github.com/w-vi/diyC/blob/master/src/nsexec.c) 
+which is is a very simple program that executes a local (host) command
+in Linux namespaces. See `nsexec --help` to see what namespaces are
+available. Usage is very simple `sudo ./nsexec -pnu myhost bash` will
+start a new bash in new pid, network and UTS namespace.

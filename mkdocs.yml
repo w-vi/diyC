@@ -1,9 +1,14 @@
-site_name: diyC
-theme: readthedocs
+site_name: Linux containers from scratch - diyC
+theme: yeti
 pages:
     - 'Home': 'index.md'
-    - 'Usage': 'usage.md'
-repo_url: https://github.com/w-vi/diyc
-repo_name: diyC
+    - diyC:
+        - Installation: 'diyc/install.md'
+        - Running containers: 'diyc/usage.md'
+    - 'Images and containers': 'images-containers.md'
+repo_url: https://github.com/w-vi/diyC
+extra_css: [extra.css]
 markdown_extensions:
-    - fenced_code
+    - toc:
+        permalink: '#'
+    - admonition

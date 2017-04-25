@@ -1,6 +1,6 @@
 # Usage
 
-```
+```bash
     diyc [hv][-m NUMBER] [-ip IPV4 ADDRESS] <NAME> <IMAGE> <CMD>
 
     -h, --help           print the help
@@ -23,9 +23,12 @@
 
 ```
 
-## Example to get a container running
+## Example: Get a container running
 
-```shell
+This is an example session showing how to get a container with minimal
+debian based system up and running from zero.
+
+```bash
 
 $ git clone git@github.com:w-vi/diyc.git
 Cloning into 'diyc'...
@@ -74,7 +77,42 @@ $ tar -xf debian.tar -C images/debian/
 
 $ sudo ./diyc my1 debian bash
 
-> root@my1:/# exit
+  root@my1:/> exit
   exit
 
 ```
+
+## Example: Network between two containers
+
+Spin up two different containers with different IPs. In this case it
+they are based on debian so Python and curl need to be installed
+first.
+
+```bash
+
+$ sudo ./diyc -i 172.16.0.30 server debian bash
+root@server:/> apt-get update && apt-get install python
+root@server:/> python -m SimpleHTTPServer
+Serving HTTP on 0.0.0.0 port 8000 ...
+
+$ sudo ./diyc -i 172.16.0.31 client debian bash
+root@client:/> apt-get update && apt-get install curl
+root@client:/> curl http://172.16.0.30:8000
+
+# it is accessible from the host too
+$ curl http://172.16.0.30:8000
+
+```
+
+## Removing exited containers
+
+Because containers after exit leave their filesystem behind and it is
+not destroyed you can run it again. The data are stored in the
+`containers/<name>/` directory so as long as this directory exists you
+can start and stop the container. To remove it just `sudo rm -rf
+containers/<name>`.
+
+
+## Removing the diyc0 bridge and iptables rules
+
+Just run `make net-clean`.
