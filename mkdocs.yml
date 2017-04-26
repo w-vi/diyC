@@ -2,10 +2,12 @@ site_name: Linux containers from scratch - diyC
 theme: yeti
 pages:
     - 'Home': 'index.md'
+    - Building containers:
+        - Linux Namespaces: 'namespaces.md'
+        - Images and containers: 'images-containers.md'
     - diyC:
         - Installation: 'diyc/install.md'
         - Running containers: 'diyc/usage.md'
-    - 'Images and containers': 'images-containers.md'
 repo_url: https://github.com/w-vi/diyC
 extra_css: [extra.css]
 markdown_extensions:

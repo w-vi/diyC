@@ -23,8 +23,12 @@ It is achieved by utilizing
 [Operating system level virtualization](https://en.wikipedia.org/wiki/Operating-system-level_virtualization).
 
 
-## Kernel features and other bits needed
+## Building containers from scratch
 
+Follwing are the kernel features and other bits needed to build
+containers from scratch.
+
+- [Linux Namespaces](namespaces.md)
 - [Images and containers](images-containers.md)
 
 

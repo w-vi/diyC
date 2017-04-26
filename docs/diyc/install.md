@@ -68,4 +68,4 @@ described in a section of it's
 own. [Images and Containers](../images-containers.md).
 
 !!! sealso "Example"
-    See [how to run a container](diyc/usage.md)
+    See [how to run a container](usage.md)
