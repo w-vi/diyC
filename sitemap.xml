@@ -4,33 +4,41 @@
     
     <url>
      <loc>/</loc>
-     <lastmod>2017-04-25</lastmod>
+     <lastmod>2017-04-26</lastmod>
      <changefreq>daily</changefreq>
     </url>
+    
+
+    
+        
+    <url>
+     <loc>/namespaces/</loc>
+     <lastmod>2017-04-26</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>/images-containers/</loc>
+     <lastmod>2017-04-26</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
     
 
     
         
     <url>
      <loc>/diyc/install/</loc>
-     <lastmod>2017-04-25</lastmod>
+     <lastmod>2017-04-26</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
      <loc>/diyc/usage/</loc>
-     <lastmod>2017-04-25</lastmod>
+     <lastmod>2017-04-26</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
-    
-
-    
-    <url>
-     <loc>/images-containers/</loc>
-     <lastmod>2017-04-25</lastmod>
-     <changefreq>daily</changefreq>
-    </url>
     
 
 </urlset>

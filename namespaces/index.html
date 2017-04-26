@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Linux Namespaces - Linux containers from scratch - diyC</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+        <link href="../extra.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Linux containers from scratch - diyC</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Building containers <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li class="active">
+    <a href="./">Linux Namespaces</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../images-containers/">Images and containers</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">diyC <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../diyc/install/">Installation</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../diyc/usage/">Running containers</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="..">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../images-containers/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/w-vi/diyC">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#linux-namespaces">Linux Namespaces</a></li>
+        
+            <li><a href="#namespaces">Namespaces</a></li>
+        
+            <li><a href="#mount-namespace">Mount namespace</a></li>
+        
+            <li><a href="#pid-namespace">PID namespace</a></li>
+        
+            <li><a href="#network-namespace">Network namespace</a></li>
+        
+            <li><a href="#creating-new-namespaces">Creating new namespaces</a></li>
+        
+            <li><a href="#nsexec">nsexec</a></li>
+        
+            <li><a href="#more-to-read">More to read</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="linux-namespaces">Linux Namespaces<a class="headerlink" href="#linux-namespaces" title="Permanent link">#</a></h1>
+<p>This section covers how the containers are isolated from the host as
+well as each other using the kernel namespaces. This is actually the
+most significant kernel feature which virtualizes the resources and isolates
+the processes from each other and using just namespaces creates a
+containers of sorts, see <a href="#nsexec">nsexec</a>.</p>
+<h2 id="namespaces">Namespaces<a class="headerlink" href="#namespaces" title="Permanent link">#</a></h2>
+<p>Pasting here the definition from the manual page
+<a href="http://man7.org/linux/man-pages/man7/namespaces.7.html">namespaces(7)</a> 
+as there probably isn't a better one.</p>
+<blockquote>
+<p>A namespace wraps a global system resource in an abstraction that
+makes it appear to the processes within the namespace that they have
+their own isolated instance of the global resource.  Changes to the
+global resource are visible to other processes that are members of the
+namespace, but are invisible to other processes.</p>
+</blockquote>
+<p>There are 7 namespaces at the moment and a process can be in one or
+more of them. There are always global namespaces for each of the types
+so that any process is always in some namespace of each type.</p>
+<p>Linux has so far following namespaces.<br />
+<em>Number in the brackets is the kernel version when the namespace was
+introduced</em></p>
+<ul>
+<li>
+<p>Mount (2.4.19)<br />
+  Isolates the mount points. A process has it's own view of the mount
+  points and changes are not propagated to other namespaces.<br />
+<a href="http://man7.org/linux/man-pages/man7/mount_namespaces.7.html">mount_namespaces(7)</a></p>
+</li>
+<li>
+<p>UTS (2.6.19)<br />
+  Isolates the hostname and the  NIS domain name. Calling
+  <a href="http://man7.org/linux/man-pages/man2/sethostname.2.html">sethostname(2)</a> or
+  <a href="http://man7.org/linux/man-pages/man2/setdomainname.2.html">setdomainname(2)</a> is
+  affecting only the namespace.</p>
+</li>
+<li>
+<p>IPC (2.6.19)<br />
+  Isolates IPC resources. System V IPC objects and POSIX message queues.</p>
+</li>
+<li>
+<p>PID (2.6.24)<br />
+  Isolates the process ID number space. Processes in different PID
+  namespaces can have the same PID or can't see PIDs of different
+  namespace.<br />
+<a href="http://man7.org/linux/man-pages/man7/pid_namespaces.7.html">pid_namespaces(7)</a></p>
+</li>
+<li>
+<p>Network (2.6.29)<br />
+  Isolates the network resources like network devices, IPv4 and IPv6
+  protocol stacks, IP routing tables, firewalls etc.</p>
+</li>
+<li>
+<p>User (3.8)<br />
+  Isolates the user and group resources, unprivileged user in the
+  "root" namespace can be a user ID 0 in the new namespace. When new
+  user namespace is created the user gets full
+  <a href="http://man7.org/linux/man-pages/man7/capabilities.7.html">capabilities(7)</a> inside
+  the namespace.<br />
+<a href="http://man7.org/linux/man-pages/man7/user_namespaces.7.html">user_namespaces(7)</a></p>
+</li>
+<li>
+<p>Cgroups (4.6)<br />
+  Isolates the view of the <code>/proc/[pid]/cgroup</code> and  <code>/proc/[pid]/mountinfo</code>.<br />
+<a href="http://man7.org/linux/man-pages/man7/cgroup_namespaces.7.html">cgroup_namespaces(7)</a></p>
+</li>
+</ul>
+<h2 id="mount-namespace">Mount namespace<a class="headerlink" href="#mount-namespace" title="Permanent link">#</a></h2>
+<p>Mount namespace isolates the mount points and effectively different
+namespaces can have different filesystem trees as well as any changes
+in the mount points may or may not be propagated in the other
+namespaces depending on the mount types (private, bind, slave etc),
+see <a href="http://man7.org/linux/man-pages/man8/mount.8.html">mount(8)</a>. In
+the container context it means that anything happening to mount points
+inside the container is not propagated elsewhere so they are
+completely isolated.</p>
+<p><img alt="Mount Namespace" src="../img/ns-mount.png" /></p>
+<p><em>Image courtesy of <a href="https://www.slideshare.net/WonchangSong1/docker30-m/24">Wonchang Song</a></em></p>
+<h2 id="pid-namespace">PID namespace<a class="headerlink" href="#pid-namespace" title="Permanent link">#</a></h2>
+<p>PID namespace isolated the PID numbers, they are a hierarchical
+structure where the parent namespace can view all the PIDs in the
+child namespaces. When a new namespace is created the first process
+gets the PID 1 and is a sort of init process of that namespace. It
+should in the ideal world be able to reap any child processes as
+otherwise it can actually exhaust the root PID space because of the
+hierarchical nature.</p>
+<p><img alt="PID Namespace" src="../img/ns-pid.png" /></p>
+<h2 id="network-namespace">Network namespace<a class="headerlink" href="#network-namespace" title="Permanent link">#</a></h2>
+<p>Network namespace creates a completely new network stack including
+routing tables, in a new network namespace you get just the loopback
+device <code>lo</code> and nothing else so you are actually unable to connect to
+the network (see <a href="#nsexec">nsexec</a>). Physical network interfaces can
+reside in only one namespace at a time so very often to connect the
+namespace somewhere the virtual Ethernet device pair
+(<a href="http://baturin.org/docs/iproute2/#Create a pair of virtual ethernet devices">veth pair</a>)
+is used with together with
+<a href="https://wiki.linuxfoundation.org/networking/bridge">Linux bridge</a>.
+In any case
+the <a href="http://man7.org/linux/man-pages/man2/setns.2.html">setns(2)</a>
+comes handy for adding a device to the namespace.  </p>
+<h2 id="creating-new-namespaces">Creating new namespaces<a class="headerlink" href="#creating-new-namespaces" title="Permanent link">#</a></h2>
+<p>There are two syscalls how to create a new namespace. </p>
+<ul>
+<li>
+<p><a href="http://man7.org/linux/man-pages/man2/clone.2.html">clone(2)</a><br />
+  is like <a href="http://man7.org/linux/man-pages/man2/fork.2.html">fork(2)</a> but
+  allows you to pick what context you share with the parent process.</p>
+</li>
+<li>
+<p><a href="http://man7.org/linux/man-pages/man2/unshare.2.html">unshare(2)</a><br />
+  is to disassociate from the parent process context and thus create a new
+  one.</p>
+</li>
+</ul>
+<p>There is also <a href="http://man7.org/linux/man-pages/man2/setns.2.html">setns(2)</a>
+which allows you to enter an existing namespace.</p>
+<h3 id="unshare-and-nsenter-in-the-shell">unshare and nsenter in the shell<a class="headerlink" href="#unshare-and-nsenter-in-the-shell" title="Permanent link">#</a></h3>
+<p>You can play with the namespaces in the shell too, 
+<a href="http://man7.org/linux/man-pages/man1/nsenter.1.html">nsenter(1)</a> is
+the command line equivalent
+of <a href="http://man7.org/linux/man-pages/man2/setns.2.html">setns(2)</a>
+and <a href="http://man7.org/linux/man-pages/man2/unshare.1.html">unshare(1)</a>
+is the equivalent
+of <a href="http://man7.org/linux/man-pages/man2/unshare.2.html">unshare(2)</a>
+syscall.</p>
+<pre><code class="bash">$ unshare --fork --pid --mount-proc 
+</code></pre>
+
+<p><em>Runs a new shell in own PID namespace, it needs to remount the procfs
+as otherwise tools like <code>ps</code> would still show the parent namespace.</em></p>
+<h2 id="nsexec">nsexec<a class="headerlink" href="#nsexec" title="Permanent link">#</a></h2>
+<p><code>nsexec</code> is a minimal example on how to use namespaces to isolate
+processes and one could argue that it creates a container using the
+host filesystem and programs.</p>
+<pre><code>./nsexec --help
+Create a child process that executes a shell command in new namespace(s),
+Usage: ./nsexec [OPTIONS] &lt;CMD&gt;
+
+    -h, --help           print this help
+    -n, --net            new network namespace
+    -p, --pid            new PID namespace
+    -u, --uts HOSTNAME   new UTS namespace
+    -v, --verbose        more verbose output
+
+    &lt;CMD&gt;                command to be executed
+</code></pre>
+
+<div class="admonition seealso">
+<p class="admonition-title">See the Code</p>
+<p><a href="https://github.com/w-vi/diyC/blob/master/src/nsexec.c">nsexec.c</a></p>
+</div>
+<h3 id="example">Example<a class="headerlink" href="#example" title="Permanent link">#</a></h3>
+<pre><code class="bash">$ sudo ./nsexec -npu myhost bash
+myhost&gt; ps -ef
+UID        PID  PPID  C STIME TTY          TIME CMD
+root         1     0  0 10:45 pts/3    00:00:00 bash
+root         6     1  0 10:45 pts/3    00:00:00 ps -ef
+myhost&gt; ip a
+1: lo: &lt;LOOPBACK&gt; mtu 65536 qdisc noop state DOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+myhost&gt; exit
+exit
+</code></pre>
+
+<h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
+<ul>
+<li><a href="https://lwn.net/Articles/531114/">Namespaces in operation, part 1: namespaces overview</a></li>
+<li><a href="https://www.ibm.com/developerworks/library/l-mount-namespaces/index.html">Applying mount namespaces</a></li>
+<li><a href="http://blog.scottlowe.org/2013/09/04/introducing-linux-network-namespaces/">Introducing Linux Network Namespaces</a></li>
+<li><a href="http://blog.scottlowe.org/2014/03/21/a-follow-up-on-linux-network-namespaces/">A Follow Up on Linux Network Namespaces</a> </li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
