@@ -247,6 +247,8 @@ dr-xr-xr-x 6 root root 0 28.04.2017 13:03 ../
 
 <p>The shell and it's children are now limited to 10MB which you can
 easily check by allocation enough memory.</p>
+<p>Use <code>rmdir</code> to remove the group. The group cannot be removed untill
+there are no processes running in that group.</p>
 <div class="admonition seealso">
 <p class="admonition-title">Code</p>
 <p>The cgroup and limits are set up after the <code>clone</code> when the pid of
