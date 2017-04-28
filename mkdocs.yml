@@ -4,6 +4,7 @@ pages:
     - 'Home': 'index.md'
     - Building containers:
         - Linux Namespaces: 'namespaces.md'
+        - Linux Cgroups: 'cgroups.md'
         - Images and containers: 'images-containers.md'
     - diyC:
         - Installation: 'diyc/install.md'

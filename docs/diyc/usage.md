@@ -20,7 +20,6 @@
                          under the images directory
 
     <CMD>                command to be executed inside the container
-
 ```
 
 ## Example: Get a container running
@@ -29,7 +28,6 @@ This is an example session showing how to get a container with minimal
 debian based system up and running from zero.
 
 ```bash
-
 $ git clone git@github.com:w-vi/diyc.git
 Cloning into 'diyc'...
 remote: Counting objects: 9, done.
@@ -79,7 +77,6 @@ $ sudo ./diyc my1 debian bash
 
   root@my1:/> exit
   exit
-
 ```
 
 ## Example: Network between two containers
@@ -89,7 +86,6 @@ they are based on debian so Python and curl need to be installed
 first.
 
 ```bash
-
 $ sudo ./diyc -i 172.16.0.30 server debian bash
 root@server:/> apt-get update && apt-get install python
 root@server:/> python -m SimpleHTTPServer
@@ -101,7 +97,19 @@ root@client:/> curl http://172.16.0.30:8000
 
 # it is accessible from the host too
 $ curl http://172.16.0.30:8000
+```
 
+## Example: Limit memory used by cgroups
+
+Having an image with python or perl installed you can easily see the
+OOM killer in action. We will allow only 10 MB of memory.
+
+```bash
+$ sudo ./diyc -m 10 cgroup debian bash
+root@cgroup:/> python -c 'str = " " * 100000'
+root@cgroup:/> python -c 'str = " " * 1000000'
+root@cgroup:/> python -c 'str = " " * 10000000'
+Killed
 ```
 
 ## Removing exited containers
