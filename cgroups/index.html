@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="../img/favicon.ico">
+
+	<title>Linux Cgroups - Linux containers from scratch - diyC</title>
+
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+        <link href="../extra.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href="..">Linux containers from scratch - diyC</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li >
+                    <a href="..">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown active">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Building containers <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../namespaces/">Linux Namespaces</a>
+</li>
+
+                    
+                        
+<li class="active">
+    <a href="./">Linux Cgroups</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../images-containers/">Images and containers</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">diyC <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="../diyc/install/">Installation</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../diyc/usage/">Running containers</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li >
+                    <a rel="next" href="../namespaces/">
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="../images-containers/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/w-vi/diyC">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#linux-cgroups-aka-control-groups">Linux cgroups a.k.a. Control Groups</a></li>
+        
+            <li><a href="#cgroups">Cgroups</a></li>
+        
+            <li><a href="#cgroup-subsystems">Cgroup subsystems</a></li>
+        
+            <li><a href="#managing-cgroups">Managing cgroups</a></li>
+        
+            <li><a href="#more-to-read">More to read</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="linux-cgroups-aka-control-groups">Linux cgroups a.k.a. Control Groups<a class="headerlink" href="#linux-cgroups-aka-control-groups" title="Permanent link">#</a></h1>
+<p>Without setting limits on resources the isolation of containers
+doesn't work well because a rogue container can eat up all the memory
+or file descriptors of the host system and thus bring everything
+down.</p>
+<p>We can use usual limits 
+<a href="http://man7.org/linux/man-pages/man2/setrlimit.2.html">getrlimit(2)</a>
+to achieve something but it is far from enough and brings issues
+because of UIDs mappings, capabilities and so on.</p>
+<h2 id="cgroups">Cgroups<a class="headerlink" href="#cgroups" title="Permanent link">#</a></h2>
+<p>Cgroups is a Linux kernel feature to limit, police and account the
+resource usage for a set of processes and containers are just
+that.</p>
+<p>Cgroups are hierarchical and child cgroups inherit certain attributes
+from their parent cgroup and cannot override those set by
+parent. Every process or thread belongs to one cgroup in given
+subsystem.</p>
+<p>There are actually two versions of the implementation
+<a href="https://www.kernel.org/doc/Documentation/cgroup-v1/">v1</a>
+and <a href="https://www.kernel.org/doc/Documentation/cgroup-v2.txt">v2</a> where
+the main difference is that v1 operates on thread level but v2 is
+simpler and considers only processes.</p>
+<h2 id="cgroup-subsystems">Cgroup subsystems<a class="headerlink" href="#cgroup-subsystems" title="Permanent link">#</a></h2>
+<p>Some of the subsystems are listed here see
+<a href="https://docs.fedoraproject.org/en-US/Fedora/17/html-single/Resource_Management_Guide/index.html#sec-How_Control_Groups_Are_Organized">Fedora Resource Management Guide</a> for
+all the details.</p>
+<ul>
+<li><em>blkio</em> - limits on IO</li>
+<li><em>cpu</em> - cpu scheduling</li>
+<li><em>cpuset</em> - assigns CPU(s)n on multicore systems</li>
+<li><em>devices</em> - controls access to devices</li>
+<li><em>memory</em> - memory limits like rss, swap etc.</li>
+</ul>
+<h2 id="managing-cgroups">Managing cgroups<a class="headerlink" href="#managing-cgroups" title="Permanent link">#</a></h2>
+<p>Cgroups have no syscalls but are managed through a filesystem under
+<code>/sys/fs/cgroup</code> where each of the subsystem is directory.</p>
+<p>It is very easy to create a new group in any of the subsystems just
+create subdirectory and kernel will populate it with the files.</p>
+<pre><code class="bash">
+$ mkdir /sys/fs/cgroup/memory/mygroup
+$ ls -la /sys/fs/cgroup/memory/mygroup
+
+total 0
+drwxr-xr-x 2 root root 0 28.04.2017 13:05 ./
+dr-xr-xr-x 6 root root 0 28.04.2017 13:03 ../
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 cgroup.clone_children
+--w--w--w- 1 root root 0 28.04.2017 13:05 cgroup.event_control
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 cgroup.procs
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.failcnt
+--w------- 1 root root 0 28.04.2017 13:05 memory.force_empty
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.failcnt
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.limit_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.max_usage_in_bytes
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.slabinfo
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.tcp.failcnt
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.tcp.limit_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.tcp.max_usage_in_bytes
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.tcp.usage_in_bytes
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.kmem.usage_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.limit_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.max_usage_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.memsw.failcnt
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.memsw.limit_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.memsw.max_usage_in_bytes
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.memsw.usage_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.move_charge_at_immigrate
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.numa_stat
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.oom_control
+---------- 1 root root 0 28.04.2017 13:05 memory.pressure_level
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.soft_limit_in_bytes
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.stat
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.swappiness
+-r--r--r-- 1 root root 0 28.04.2017 13:05 memory.usage_in_bytes
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 memory.use_hierarchy
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 notify_on_release
+-rw-r--r-- 1 root root 0 28.04.2017 13:05 tasks
+
+</code></pre>
+
+<p>Now we can set a memory limit to 100 MB for this group.</p>
+<pre><code class="bash">$ echo 1000000 &gt; /sys/fs/cgroup/memory/mygroup/memory.limit_in_bytes
+</code></pre>
+
+<p>To add a process to our group we need to just append the pid to
+<code>cgroup.procs</code> file.</p>
+<pre><code class="bash"> echo $$ &gt; /sys/fs/cgroup/memory/groupname/cgroup.procs
+</code></pre>
+
+<p>The shell and it's children are now limited to 10MB which you can
+easily check by allocation enough memory.</p>
+<div class="admonition seealso">
+<p class="admonition-title">Code</p>
+<p>The cgroup and limits are set up after the <code>clone</code> when the pid of
+the container is known.
+<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L198-L232">diyc.c:198-232</a><br />
+<a href="../diyc/usage#example-limit-memory-used-by-cgroups">Example using diyc</a></p>
+</div>
+<h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
+<ul>
+<li><a href="https://www.kernel.org/doc/Documentation/cgroup-v1/">Linux kernel cgroups v1</a></li>
+<li><a href="https://www.kernel.org/doc/Documentation/cgroup-v2.txt">Linux kernel cgroups v2</a></li>
+<li><a href="https://help.ubuntu.com/lts/serverguide/cgroups.html">Control groups on Ubuntu Server Guide</a></li>
+<li><a href="https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/ch01.html">RHEL Resource Management Guide</a></li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

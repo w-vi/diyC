@@ -69,6 +69,12 @@
                     
                         
 <li >
+    <a href="../../cgroups/">Linux Cgroups</a>
+</li>
+
+                    
+                        
+<li >
     <a href="../../images-containers/">Images and containers</a>
 </li>
 
@@ -142,6 +148,8 @@
         
             <li><a href="#example-network-between-two-containers">Example: Network between two containers</a></li>
         
+            <li><a href="#example-limit-memory-used-by-cgroups">Example: Limit memory used by cgroups</a></li>
+        
             <li><a href="#removing-exited-containers">Removing exited containers</a></li>
         
             <li><a href="#removing-the-diyc0-bridge-and-iptables-rules">Removing the diyc0 bridge and iptables rules</a></li>
@@ -171,14 +179,12 @@
                          under the images directory
 
     &lt;CMD&gt;                command to be executed inside the container
-
 </code></pre>
 
 <h2 id="example-get-a-container-running">Example: Get a container running<a class="headerlink" href="#example-get-a-container-running" title="Permanent link">#</a></h2>
 <p>This is an example session showing how to get a container with minimal
 debian based system up and running from zero.</p>
-<pre><code class="bash">
-$ git clone git@github.com:w-vi/diyc.git
+<pre><code class="bash">$ git clone git@github.com:w-vi/diyc.git
 Cloning into 'diyc'...
 remote: Counting objects: 9, done.
 remote: Compressing objects: 100% (8/8), done.
@@ -227,15 +233,13 @@ $ sudo ./diyc my1 debian bash
 
   root@my1:/&gt; exit
   exit
-
 </code></pre>
 
 <h2 id="example-network-between-two-containers">Example: Network between two containers<a class="headerlink" href="#example-network-between-two-containers" title="Permanent link">#</a></h2>
 <p>Spin up two different containers with different IPs. In this case it
 they are based on debian so Python and curl need to be installed
 first.</p>
-<pre><code class="bash">
-$ sudo ./diyc -i 172.16.0.30 server debian bash
+<pre><code class="bash">$ sudo ./diyc -i 172.16.0.30 server debian bash
 root@server:/&gt; apt-get update &amp;&amp; apt-get install python
 root@server:/&gt; python -m SimpleHTTPServer
 Serving HTTP on 0.0.0.0 port 8000 ...
@@ -246,7 +250,16 @@ root@client:/&gt; curl http://172.16.0.30:8000
 
 # it is accessible from the host too
 $ curl http://172.16.0.30:8000
+</code></pre>
 
+<h2 id="example-limit-memory-used-by-cgroups">Example: Limit memory used by cgroups<a class="headerlink" href="#example-limit-memory-used-by-cgroups" title="Permanent link">#</a></h2>
+<p>Having an image with python or perl installed you can easily see the
+OOM killer in action. We will allow only 10 MB of memory.</p>
+<pre><code class="bash">$ sudo ./diyc -m 10 cgroup debian bash
+root@cgroup:/&gt; python -c 'str = &quot; &quot; * 100000'
+root@cgroup:/&gt; python -c 'str = &quot; &quot; * 1000000'
+root@cgroup:/&gt; python -c 'str = &quot; &quot; * 10000000'
+Killed
 </code></pre>
 
 <h2 id="removing-exited-containers">Removing exited containers<a class="headerlink" href="#removing-exited-containers" title="Permanent link">#</a></h2>
