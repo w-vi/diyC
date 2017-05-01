@@ -7,15 +7,15 @@
         
         
         
-        <link rel="shortcut icon" href="./img/favicon.ico">
+        <link rel="shortcut icon" href="../img/favicon.ico">
 
-	<title>Linux containers from scratch - diyC</title>
+	<title>Networking - Linux containers from scratch - diyC</title>
 
-        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
-        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
-        <link rel="stylesheet" href="./css/highlight.css">
-        <link href="./css/base.css" rel="stylesheet">
-        <link href="./extra.css" rel="stylesheet">
+        <link href="../css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="../css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="../css/highlight.css">
+        <link href="../css/base.css" rel="stylesheet">
+        <link href="../extra.css" rel="stylesheet">
 
         <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
         <!--[if lt IE 9]>
@@ -42,7 +42,7 @@
             </button>
 
             <!-- Main title -->
-            <a class="navbar-brand" href=".">Linux containers from scratch - diyC</a>
+            <a class="navbar-brand" href="..">Linux containers from scratch - diyC</a>
         </div>
 
         <!-- Expanded navigation -->
@@ -51,37 +51,37 @@
             <ul class="nav navbar-nav">
             
             
-                <li class="active">
-                    <a href=".">Home</a>
+                <li >
+                    <a href="..">Home</a>
                 </li>
             
             
             
-                <li class="dropdown">
+                <li class="dropdown active">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown">Building containers <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         
 <li >
-    <a href="namespaces/">Linux Namespaces</a>
+    <a href="../namespaces/">Linux Namespaces</a>
 </li>
 
                     
                         
 <li >
-    <a href="cgroups/">Linux Cgroups</a>
+    <a href="../cgroups/">Linux Cgroups</a>
+</li>
+
+                    
+                        
+<li class="active">
+    <a href="./">Networking</a>
 </li>
 
                     
                         
 <li >
-    <a href="networking/">Networking</a>
-</li>
-
-                    
-                        
-<li >
-    <a href="images-containers/">Images and containers</a>
+    <a href="../images-containers/">Images and containers</a>
 </li>
 
                     
@@ -96,13 +96,13 @@
                     
                         
 <li >
-    <a href="diyc/install/">Installation</a>
+    <a href="../diyc/install/">Installation</a>
 </li>
 
                     
                         
 <li >
-    <a href="diyc/usage/">Running containers</a>
+    <a href="../diyc/usage/">Running containers</a>
 </li>
 
                     
@@ -119,13 +119,13 @@
                         <i class="fa fa-search"></i> Search
                     </a>
                 </li>
-                <li class="disabled">
-                    <a rel="next" >
+                <li >
+                    <a rel="next" href="../cgroups/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="namespaces/">
+                    <a rel="prev" href="../images-containers/">
                         Next <i class="fa fa-arrow-right"></i>
                     </a>
                 </li>
@@ -148,65 +148,55 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#linux-containers-from-scratch-diyc">Linux containers from scratch - diyC</a></li>
+        <li class="main active"><a href="#containers-and-networking">Containers and networking</a></li>
         
-            <li><a href="#what-is-a-linux-container">What is a Linux container</a></li>
+            <li><a href="#virtual-ethernet-devices">Virtual ethernet devices</a></li>
         
-            <li><a href="#building-containers-from-scratch">Building containers from scratch</a></li>
+            <li><a href="#connecting-containers-using-bridge">Connecting containers using bridge</a></li>
         
-            <li><a href="#what-is-diyc">What is diyC</a></li>
+            <li><a href="#iptables">iptables</a></li>
         
-            <li><a href="#nsexec">nsexec</a></li>
+            <li><a href="#more-to-read">More to read</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="linux-containers-from-scratch-diyc">Linux containers from scratch - diyC<a class="headerlink" href="#linux-containers-from-scratch-diyc" title="Permanent link">#</a></h1>
-<p>Linux containers exist for a while and are now a mainstream
-topic. This is an introduction on how they are created and what they
-actually are made of. If you want to see the code then head directly
-to <a href="https://github.com/w-vi/diyc">the GitHub repo</a> otherwise read on
-the topic you are interested in.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Any suggestions or comments are welcome please don't hesitate
-and <a href="https://github.com/w-vi/diyc/issues/new">file an issue on GitHub</a>.</p>
+<h1 id="containers-and-networking">Containers and networking<a class="headerlink" href="#containers-and-networking" title="Permanent link">#</a></h1>
+<p>Containers without network access are in many cases pretty useless. If
+the container should not share network resources with the host that is
+has it's own network namespace we need to connect it somehow because
+by default new network namespace has only loop device, you can add the
+network device to a namespace but it can reside only in one of them.
+Considering dozens of containers on a single host we are not going to
+have enough physical interfaces.</p>
+<h2 id="virtual-ethernet-devices">Virtual ethernet devices<a class="headerlink" href="#virtual-ethernet-devices" title="Permanent link">#</a></h2>
+<p>In Linux you can create virtual ethernet devices, they come in pairs,
+a so called veth pair, which you can think of as two ethernet cards
+connected by a cable. using ip tool you can easily assign one of the
+pair to the container's namespace and the other somewhere
+else. Ideally
+to <a href="https://wiki.linuxfoundation.org/networking/bridge">linux bridge</a>
+or <a href="http://openvswitch.org/">Open vSwitch</a> so we can create virtual
+networks.</p>
+<h2 id="connecting-containers-using-bridge">Connecting containers using bridge<a class="headerlink" href="#connecting-containers-using-bridge" title="Permanent link">#</a></h2>
+<p><img alt="Veth Bridge" src="../img/veth-bridge.png" /></p>
+<div class="admonition seealso">
+<p class="admonition-title">Code</p>
+<p>Code in diyC uses <code>system()</code> function to shell out so you can
+easily replicate it on the command line.<br />
+<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L234-L271">diyc.c:234-271</a></p>
 </div>
-<h2 id="what-is-a-linux-container">What is a Linux container<a class="headerlink" href="#what-is-a-linux-container" title="Permanent link">#</a></h2>
-<p>Containers in some form exist for quite while even though <a href="http://www.networkworld.com/article/2226996/cisco-subnet/software-containers--used-more-frequently-than-most-realize.html">we don't
-always think of them as containers</a>. </p>
-<blockquote>
-<p>Linux container to put it simply it is a usual Linux process (or
-group of processes) with a limited (altered) view of the system.</p>
-</blockquote>
-<p>It is achieved by utilizing
-<a href="https://en.wikipedia.org/wiki/Operating-system-level_virtualization">Operating system level virtualization</a>.</p>
-<h2 id="building-containers-from-scratch">Building containers from scratch<a class="headerlink" href="#building-containers-from-scratch" title="Permanent link">#</a></h2>
-<p>Follwing are the kernel features and other bits needed to build
-containers from scratch.</p>
+<h2 id="iptables">iptables<a class="headerlink" href="#iptables" title="Permanent link">#</a></h2>
+<p>Once the containers are hooked up using veth pars and a bridge it
+comes to iptables to do NAT and routing to allow containers to connect
+to the outer world.</p>
+<h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
 <ul>
-<li><a href="namespaces/">Linux Namespaces</a></li>
-<li><a href="cgroups/">Linux cgroups</a></li>
-<li><a href="networking/">Networking</a></li>
-<li><a href="images-containers/">Images and containers</a></li>
-</ul>
-<h2 id="what-is-diyc">What is diyC<a class="headerlink" href="#what-is-diyc" title="Permanent link">#</a></h2>
-<p>It is a simple educational Linux container runtime. It is
-intentionally simple and leaves a lot of stuff out. It is
-a <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c">single C file</a>
-of roughly 500 lines including comments showing the core features of
-the Linux used to build containers. It includes also the creation of a
-container from an image to clarify how images and containers are
-related.</p>
-<h2 id="nsexec">nsexec<a class="headerlink" href="#nsexec" title="Permanent link">#</a></h2>
-<p>Part of the project is also
-a <a href="https://github.com/w-vi/diyC/blob/master/src/nsexec.c"><code>nsexec</code> binary</a> 
-which is is a very simple program that executes a local (host) command
-in Linux namespaces. See <code>nsexec --help</code> to see what namespaces are
-available. Usage is very simple <code>sudo ./nsexec -pnu myhost bash</code> will
-start a new bash in new pid, network and UTS namespace.</p></div>
+<li><a href="http://www.opencloudblog.com/?p=66">Linux Switching – Interconnecting Namespaces</a></li>
+<li><a href="http://www.opencloudblog.com/?p=42">Linux Network Namespaces</a></li>
+</ul></div>
         </div>
 
         <footer class="col-md-12">
@@ -215,12 +205,12 @@ start a new bash in new pid, network and UTS namespace.</p></div>
             <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
         </footer>
 
-        <script src="./js/jquery-1.10.2.min.js"></script>
-        <script src="./js/bootstrap-3.0.3.min.js"></script>
-        <script src="./js/highlight.pack.js"></script>
-        <script>var base_url = '.';</script>
-        <script data-main="./mkdocs/js/search.js" src="./mkdocs/js/require.js"></script>
-        <script src="./js/base.js"></script>
+        <script src="../js/jquery-1.10.2.min.js"></script>
+        <script src="../js/bootstrap-3.0.3.min.js"></script>
+        <script src="../js/highlight.pack.js"></script>
+        <script>var base_url = '..';</script>
+        <script data-main="../mkdocs/js/search.js" src="../mkdocs/js/require.js"></script>
+        <script src="../js/base.js"></script>
 
         <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
             <div class="modal-dialog">
