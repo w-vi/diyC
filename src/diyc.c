@@ -204,32 +204,39 @@ change_root(char *path)
 static int
 cgroup_setup(pid_t pid, unsigned int limit)
 {
+    char cgroup_dir[PATH_MAX + 1];
+    char cgroup_file[PATH_MAX + 1];
     unsigned long mem = limit * (1024 * 1024);
 
     LOG("HOST| Setting up cgroups with memory limit %d MB (%lu)", limit, mem);
 
-    if (mkdir("/sys/fs/cgroup/memory/diyc", 0700) < 0 && errno != EEXIST) die("making cgroup");
+    snprintf(cgroup_dir, PATH_MAX, "/sys/fs/cgroup/memory/%u", pid);
+    if (mkdir(cgroup_dir, 0700) < 0 && errno != EEXIST) die("making cgroup");
 
     /* Maximum allowed memory for the container */
-    FILE *fp = fopen("/sys/fs/cgroup/memory/diyc/memory.limit_in_bytes", "w+");
+    snprintf(cgroup_file, PATH_MAX, "%s/memory.limit_in_bytes", cgroup_dir);
+    FILE *fp = fopen(cgroup_file, "w+");
     if (NULL == fp) die("Could not set memory limit");
-    fprintf(fp, "%lu", mem);
+    fprintf(fp, "%lu\n", mem);
     fclose(fp);
 
     /* No swap */
-    fp = fopen("/sys/fs/cgroup/memory/diyc/memory.memsw.limit_in_bytes", "w");
+    snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
+    fp = fopen(cgroup_file, "w");
     if (NULL == fp) die("Could not set swap limit");
-    fprintf(fp, "0");
+    fprintf(fp, "0\n");
     fclose(fp);
 
     /* Add the container pid to the group */
-    fp = fopen("/sys/fs/cgroup/memory/diyc/cgroup.procs", "a");
+    snprintf(cgroup_file, PATH_MAX, "%s/cgroup.procs", cgroup_dir);
+    fp = fopen(cgroup_file, "a");
     if (NULL == fp) die("Could not add proc to cgroup.procs");
     fprintf(fp, "%d\n", pid);
     fclose(fp);
 
     return 0;
 }
+
 
 /* Create the veth pair and bring it up.
  * Using the system() function and ip tool (iproute2 package) to avoid
@@ -395,6 +402,7 @@ main(int argc, char *argv[])
     container_t c;
     pid_t pid = -1;
     struct clone_stack stack;
+    char cgroup_dir[PATH_MAX + 1];
 
     verbose = 0;
     memset(c.ip, 0, IPLEN);
@@ -478,7 +486,10 @@ main(int argc, char *argv[])
     waitpid(pid, NULL, 0);
 
     /* We can remove the cgroup if it was created. */
-    if (memory) rmdir("/sys/fs/cgroup/memory/diyc");
+    if (memory) {
+        snprintf(cgroup_dir, PATH_MAX, "/sys/fs/cgroup/memory/%d", pid);
+        rmdir(cgroup_dir);
+    }
 
     LOG("HOST| Container exited");
     return 0;

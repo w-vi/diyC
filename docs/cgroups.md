@@ -114,7 +114,7 @@ there are no processes running in that group.
 !!! seealso "Code"
     The cgroup and limits are set up after the `clone` when the pid of
     the container is known.
-    [diyc.c:198-232](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L198-L232)  
+    [diyc.c:198-237](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L198-L238)  
     [Example using diyc](diyc/usage#example-limit-memory-used-by-cgroups)
 
 

@@ -129,7 +129,7 @@ copy some configuration files to the new root.
 
 !!! seealso "Code"
 
-    See the implementation in [diy.c:304-330](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L304-L330)
+    See the implementation in [diy.c:311-337](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L311-L337)
 
 Very similar behavior is also possible using completely different
 approaches, i.e utilizing subvolumes and snapshots
