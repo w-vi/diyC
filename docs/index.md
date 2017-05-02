@@ -29,7 +29,13 @@ Follwing are the kernel features and other bits needed to build
 containers from scratch.
 
 - [Linux Namespaces](namespaces.md)
+- [Linux cgroups](cgroups.md)
+- [Networking](networking.md)
 - [Images and containers](images-containers.md)
+
+One topic which is not covered although it should is
+[capabilities(7)](http://man7.org/linux/man-pages/man7/capabilities.7.html) and
+privilages like low port binding .
 
 
 ## What is diyC

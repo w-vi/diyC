@@ -5,6 +5,7 @@ pages:
     - Building containers:
         - Linux Namespaces: 'namespaces.md'
         - Linux Cgroups: 'cgroups.md'
+        - Networking: 'networking.md'
         - Images and containers: 'images-containers.md'
     - diyC:
         - Installation: 'diyc/install.md'
