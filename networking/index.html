@@ -150,7 +150,7 @@
     
         <li class="main active"><a href="#containers-and-networking">Containers and networking</a></li>
         
-            <li><a href="#virtual-ethernet-devices">Virtual ethernet devices</a></li>
+            <li><a href="#virtual-ethernet-devices">Virtual Ethernet devices</a></li>
         
             <li><a href="#connecting-containers-using-bridge">Connecting containers using bridge</a></li>
         
@@ -171,27 +171,53 @@ by default new network namespace has only loop device, you can add the
 network device to a namespace but it can reside only in one of them.
 Considering dozens of containers on a single host we are not going to
 have enough physical interfaces.</p>
-<h2 id="virtual-ethernet-devices">Virtual ethernet devices<a class="headerlink" href="#virtual-ethernet-devices" title="Permanent link">#</a></h2>
-<p>In Linux you can create virtual ethernet devices, they come in pairs,
-a so called veth pair, which you can think of as two ethernet cards
+<h2 id="virtual-ethernet-devices">Virtual Ethernet devices<a class="headerlink" href="#virtual-ethernet-devices" title="Permanent link">#</a></h2>
+<p>In Linux you can create virtual Ethernet devices, they come in pairs,
+a so called veth pair, which you can think of as two Ethernet cards
 connected by a cable. using ip tool you can easily assign one of the
 pair to the container's namespace and the other somewhere
 else. Ideally
-to <a href="https://wiki.linuxfoundation.org/networking/bridge">linux bridge</a>
+to <a href="https://wiki.linuxfoundation.org/networking/bridge">Linux bridge</a>
 or <a href="http://openvswitch.org/">Open vSwitch</a> so we can create virtual
 networks.</p>
 <h2 id="connecting-containers-using-bridge">Connecting containers using bridge<a class="headerlink" href="#connecting-containers-using-bridge" title="Permanent link">#</a></h2>
-<p><img alt="Veth Bridge" src="../img/veth-bridge.png" /></p>
+<p>Using the Linux bridge is the easiest, we create
+the bridge which we call here <code>diyc0</code> and assign it IPv4 address <code>172.16.0.1/24</code>.</p>
+<pre><code class="bash"># Create the bridge
+$ ip link add name diyc0 type bridge
+# Assign it IPv4
+$ ip addr add dev diyc0 172.16.0.1/24
+$ ip link set diyc0 up
+</code></pre>
+
+<p>Before we run the container we connect the created <code>vethXYZ</code> device to the
+bridge that's the host half of the pair. The other one is later added
+to the network namespace of the container, effectively connecting the
+two namespace.</p>
+<pre><code class="bash"># Create the veth pair
+$ ip link add vethXYZ type veth peer name veth1
+# Connect the host half to bridge
+$ ip link set vethXYZ master diyc0
+# Add the veth1 to the container's network namespace
+# &lt;PID&gt; is pid of the container process
+$ ip link set veth1 netns &lt;PID&gt;
+</code></pre>
+
+<p><em>Below: Connecting containers using veth pairs and Linux bridge</em>
+<img alt="veth Bridge" src="../img/veth-bridge.png" /></p>
 <div class="admonition seealso">
 <p class="admonition-title">Code</p>
 <p>Code in diyC uses <code>system()</code> function to shell out so you can
 easily replicate it on the command line.<br />
-<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L234-L271">diyc.c:234-271</a></p>
+<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L241-L278">diyc.c:241-278</a></p>
 </div>
 <h2 id="iptables">iptables<a class="headerlink" href="#iptables" title="Permanent link">#</a></h2>
-<p>Once the containers are hooked up using veth pars and a bridge it
+<p>Once the containers are hooked up using veth pairs and a bridge it
 comes to iptables to do NAT and routing to allow containers to connect
-to the outer world.</p>
+to the outer world. See the <code>net-setup</code> code in the
+<a href="https://github.com/w-vi/diyC/blob/master/Makefile#L28-L37">Makefile</a>
+to inspect the exact rules. Basically setup NAT and forwarding on the container
+network in our case <code>172.16.0.0/16</code>.</p>
 <h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>
 <ul>
 <li><a href="http://www.opencloudblog.com/?p=66">Linux Switching – Interconnecting Namespaces</a></li>
