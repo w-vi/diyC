@@ -36,6 +36,7 @@
 #include <fcntl.h>
 #include <sys/sendfile.h>
 #include <fts.h>
+#include <dirent.h>
 #include <getopt.h>
 
 #ifndef FALSE
@@ -115,7 +116,6 @@ usage(char *name)
     exit(EXIT_FAILURE);
 }
 
-
 static int
 copy_file(char *src, char *dst)
 {
@@ -185,6 +185,7 @@ change_root(char *path)
     chdir("/");
 
     if (copy_file("/.pivot_root/etc/resolv.conf", "/etc/resolv.conf") < 0) die("copy resolv.conf");
+    if (copy_file("/.pivot_root/etc/nsswitch.conf", "/etc/nsswitch.conf") < 0) die("copy nsswitch.conf");
 
     /* Unmount the old root and remove it so it is not accessible from
      * the container */
@@ -287,10 +288,10 @@ container_exec(void *arg)
     int err = 0;
     char ch;
     container_t *c = (container_t *)arg;
-    char ovfs_opts[1024];
-    char upper[512];
-    char work[512];
-    char merged[512];
+    char *ovfs_opts;
+    char *upper;
+    char *work;
+    char *merged;
 
 
     close(c->pipe_fd[1]);    /* Close our descriptor for the write end
@@ -316,15 +317,16 @@ container_exec(void *arg)
        workdir=containers/<container>/work \
        containers/<container>/merged
      */
-    snprintf(upper, 511, "%s/upper", c->path);
-    snprintf(work, 511, "%s/work", c->path);
-    snprintf(merged, 511, "%s/merged", c->path);
+    asprintf(&upper, "%s/upper", c->path);
+    asprintf(&work, "%s/work", c->path);
+    asprintf(&merged, "%s/merged", c->path);
     if (mkdir(c->path, 0700) < 0 && errno != EEXIST) die("container dir");
     if (mkdir(upper, 0700) < 0 && errno != EEXIST) die("container upper dir");
     if (mkdir(work, 0700) < 0 && errno != EEXIST) die("container work dir");
     if (mkdir(merged, 0700) < 0 && errno != EEXIST) die("container merged dir");
 
-    snprintf(ovfs_opts, 1023, "lowerdir=%s/images/%s,upperdir=%s,workdir=%s",cwd, c->image, upper, work);
+    asprintf(&ovfs_opts, "lowerdir=%s/images/%s,upperdir=%s,workdir=%s",cwd, c->image, upper, work);
+
     LOG("CONTAINER| overlayfs opts: %s", ovfs_opts);
 
     LOG("CONTAINER| root on host: %s", merged);
@@ -337,6 +339,11 @@ container_exec(void *arg)
     change_root(merged);
 
     LOG("CONTAINER| Root changed");
+
+    free(ovfs_opts);
+    free(upper);
+    free(work);
+    free(merged);
 
     /* Mount new /dev, here we can actually create just some subset of
      * devices, but for the sake of the simplicity just create a new
@@ -377,6 +384,10 @@ container_exec(void *arg)
         system(ip_cmd);
         free(ip_cmd);
         system("ip route add default via 172.16.0.1");
+    }
+
+    if (access(c->args[0], R_OK | X_OK) != 0) {
+        printf("access %s failed %s:\n", c->args[0], strerror(errno));
     }
 
     /* Ready to execute the container command.*/
@@ -494,4 +505,3 @@ main(int argc, char *argv[])
     LOG("HOST| Container exited");
     return 0;
 }
-

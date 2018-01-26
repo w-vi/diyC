@@ -5,9 +5,6 @@ ETH0 := $(shell ip -o -4 route show to default | awk '{print $$5}')
 
 CC = gcc
 CFLAGS = -std=c99 -Wall -Werror -O2
-#CFLAGS = -std=c99 -Wall -Werror -O0 -ggdb
-
-
 
 all: diyc nsexec
 
@@ -17,9 +14,21 @@ diyc: src/diyc.c
 nsexec: src/nsexec.c
 	$(CC) $(CFLAGS) src/nsexec.c -o $@
 
-.PHONY: clean, net-setup, net-clean, setup
+.PHONY: clean, net-setup, net-clean, setup, rmi, rm
 clean:
 	rm -rf nsexec diyc
+
+
+rmi:
+	rm -rf images/$(img)
+
+rm:
+	sudo rm -rf containers/*
+
+pull:
+	if [ -d images/$(img) ]; then rm -rf images/$(img); fi
+	mkdir -p images/$(img)
+	tar xf $(tar) -C images/$(img)
 
 setup: net-setup
 	mkdir -p containers
