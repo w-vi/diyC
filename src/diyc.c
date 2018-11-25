@@ -128,7 +128,8 @@ copy_file(char *src, char *dst)
         return -1;
     }
 
-    if ((out = open(dst, O_RDWR | O_CREAT)) == -1)  {
+    if ((out = open(dst, O_RDWR | O_CREAT, 0666)) == -1)  {
+    //if ((out = open(dst, O_RDWR | O_CREAT)) == -1)  {
         close(in);
         return -1;
     }
@@ -216,6 +217,7 @@ cgroup_setup(pid_t pid, unsigned int limit)
 
     /* Maximum allowed memory for the container */
     snprintf(cgroup_file, PATH_MAX, "%s/memory.limit_in_bytes", cgroup_dir);
+
     FILE *fp = fopen(cgroup_file, "w+");
     if (NULL == fp) die("Could not set memory limit");
     fprintf(fp, "%lu\n", mem);

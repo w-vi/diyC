@@ -34,3 +34,8 @@
 
 # mkdocs
 site/
+
+*.tar
+images
+diyc
+nsexec
