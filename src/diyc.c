@@ -224,11 +224,13 @@ cgroup_setup(pid_t pid, unsigned int limit)
     fclose(fp);
 
     /* No swap */
+    /*
     snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
     fp = fopen(cgroup_file, "w");
     if (NULL == fp) die("Could not set swap limit");
     fprintf(fp, "0\n");
     fclose(fp);
+    */
 
     /* Add the container pid to the group */
     snprintf(cgroup_file, PATH_MAX, "%s/cgroup.procs", cgroup_dir);
