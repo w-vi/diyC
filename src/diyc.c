@@ -128,8 +128,7 @@ copy_file(char *src, char *dst)
         return -1;
     }
 
-    if ((out = open(dst, O_RDWR | O_CREAT, 0666)) == -1)  {
-    //if ((out = open(dst, O_RDWR | O_CREAT)) == -1)  {
+    if ((out = open(dst, O_RDWR | O_CREAT, S_IRWXU)) == -1)  {
         close(in);
         return -1;
     }
@@ -224,13 +223,6 @@ cgroup_setup(pid_t pid, unsigned int limit)
     fclose(fp);
 
     /* No swap */
-    /*
-    snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
-    fp = fopen(cgroup_file, "w");
-    if (NULL == fp) die("Could not set swap limit");
-    fprintf(fp, "0\n");
-    fclose(fp);
-    */
 
     /* Add the container pid to the group */
     snprintf(cgroup_file, PATH_MAX, "%s/cgroup.procs", cgroup_dir);
