@@ -35,7 +35,13 @@
 # mkdocs
 site/
 
+# tarball
 *.tar
+
+# directorys
 images
+containers
+
+# [Make] Executables
 diyc
 nsexec
