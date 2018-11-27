@@ -4,7 +4,7 @@ BRIDGE := diyc0
 ETH0 := $(shell ip -o -4 route show to default | awk '{print $$5}')
 
 CC = gcc
-CFLAGS = -std=c99 -Wall -Werror -O2
+CFLAGS = -std=c99 -Wall -Wno-unused-result -Werror -O2
 
 all: diyc nsexec
 

@@ -128,7 +128,7 @@ copy_file(char *src, char *dst)
         return -1;
     }
 
-    if ((out = open(dst, O_RDWR | O_CREAT)) == -1)  {
+    if ((out = open(dst, O_RDWR | O_CREAT, S_IRWXU)) == -1)  {
         close(in);
         return -1;
     }
@@ -216,6 +216,7 @@ cgroup_setup(pid_t pid, unsigned int limit)
 
     /* Maximum allowed memory for the container */
     snprintf(cgroup_file, PATH_MAX, "%s/memory.limit_in_bytes", cgroup_dir);
+
     FILE *fp = fopen(cgroup_file, "w+");
     if (NULL == fp) die("Could not set memory limit");
     fprintf(fp, "%lu\n", mem);
@@ -223,10 +224,13 @@ cgroup_setup(pid_t pid, unsigned int limit)
 
     /* No swap */
     snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
-    fp = fopen(cgroup_file, "w");
-    if (NULL == fp) die("Could not set swap limit");
-    fprintf(fp, "0\n");
-    fclose(fp);
+
+    if(access(cgroup_file, R_OK | W_OK) == 0) {
+      fp = fopen(cgroup_file, "w");
+      if (NULL == fp) die("Could not set swap limit");
+      fprintf(fp, "0\n");
+      fclose(fp);
+    }
 
     /* Add the container pid to the group */
     snprintf(cgroup_file, PATH_MAX, "%s/cgroup.procs", cgroup_dir);
