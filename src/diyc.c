@@ -225,7 +225,7 @@ cgroup_setup(pid_t pid, unsigned int limit)
     /* No swap */
     snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
 
-    if(access(cgroup_file, R_OK | W_OK) == 0){
+    if(access(cgroup_file, R_OK | W_OK) == 0) {
       fp = fopen(cgroup_file, "w");
       if (NULL == fp) die("Could not set swap limit");
       fprintf(fp, "0\n");
