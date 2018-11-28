@@ -1,5 +1,5 @@
 site_name: Linux containers from scratch - diyC
-theme: yeti
+theme: mkdocs
 pages:
     - 'Home': 'index.md'
     - Building containers:
