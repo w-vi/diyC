@@ -1,6 +1,6 @@
 site_name: Linux containers from scratch - diyC
 theme: mkdocs
-pages:
+nav:
     - 'Home': 'index.md'
     - Building containers:
         - Linux Namespaces: 'namespaces.md'
