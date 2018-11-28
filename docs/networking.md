@@ -55,8 +55,8 @@ $ ip link set veth1 netns <PID>
 
 !!! seealso "Code"
     Code in diyC uses `system()` function to shell out so you can
-    easily replicate it on the command line.  
-    [diyc.c:241-278](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L241-L278)
+    easily replicate it on the command line.
+    [diyc.c:265-302](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L265-L302)
 
 
 ## iptables

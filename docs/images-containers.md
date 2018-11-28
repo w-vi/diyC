@@ -62,7 +62,7 @@ how to inspect an image is to export it using docker.
         drwxr-xr-x  10 wvi wvi  4096 21.03.2017 00:26 usr/
         drwxr-xr-x  11 wvi wvi  4096 21.03.2017 00:26 var/
         -rwxr-xr-x   1 wvi wvi     0 23.04.2017 11:00 .dockerenv*
-   
+
 
 
 ### Creating the image
@@ -77,7 +77,7 @@ pointers.
 - Statically linked programs where you need just that one binary
   nothing else so something along those lines should suffice. That's
   for example what you can do with [Go programs](https://golang.org/).
-  
+
         $ mkdir image
         $ cp <my-statically-linked-binary> image
         $ tar -cf image.tar image
@@ -89,7 +89,7 @@ pointers.
   [great talk on this topic from Brian "Redbeard" Harrington](https://youtu.be/gMpldbcMHuI?t=419) from
   [coreOS](https://coreos.com/).
 
-  
+
 - Get your filesystem layout and copy files needed. you can use
   package managers like `dnf`, `yum`, `debootsrap` etc. and tar the
   structure up.
@@ -129,14 +129,14 @@ copy some configuration files to the new root.
 
 !!! seealso "Code"
 
-    See the implementation in [diy.c:311-337](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L311-L337)
+    See the implementation in [diy.c:335-361](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L335-L361)
 
 Very similar behavior is also possible using completely different
 approaches, i.e utilizing subvolumes and snapshots
 of [btrfs](https://en.wikipedia.org/wiki/Btrfs) or
 using [devicemapper](https://en.wikipedia.org/wiki/Device_mapper). Docker
 uses devicemapper approach on many systems by default and has a very
-good description of the 
+good description of the
 [devicemapper approach](https://docs.docker.com/engine/userguide/storagedriver/device-mapper-driver/).
 
 
@@ -155,7 +155,7 @@ was merged to mainline kernel in version 3.18. It is actually called
 overlay since the merge. To check if you are able to use it see
 `/proc/filesystems` file ([man 5 filesystems](http://man7.org/linux/man-pages/man5/fs.5.html)).
 
-!!! note "overlay kernel module" 
+!!! note "overlay kernel module"
     Very often it does not show up in the `/proc/filesystems` because
     it is loaded only if it is used so try `modprobe overlay` to load the kernel module.
 
@@ -182,7 +182,7 @@ Overlay [mount(8)](http://man7.org/linux/man-pages/man8/mount.8.html) options.
     operations. `lowerdir` can be on a different filesystem though.
 
 
-```bash 
+```bash
 # In tmp create the needed directory structure
 $ mkdir /tmp/lower /tmp/upper /tmp/workdir /tmp/merged
 # and mount an overlay fs
@@ -200,15 +200,15 @@ the `lower`, `upper` and  `merged` you can observe the following.
 
 - If there are directories in both `lower` and `upper` their content
   is merged.
-  
+
 - Files created in the `lower` or `upper` directory are visible in the
   `merged`.
-  
+
 - Any files created in the merged are actually created in the `upper`.
 
 - Writing to existing files appears again only in `upper` even if the
   file was originally in `lower`, the file is *copied up*.
-  
+
 - Deleting a file or directory in `merged` that was in the `lower`,
   removes it from merged but not `lower`. It creates a so called
   "whiteout" file/directory in the `upper`.
@@ -228,4 +228,3 @@ container you see the `merged`.
 - [Union file systems: Implementations, part I](https://lwn.net/Articles/325369/)
 - [Unioning file systems: Implementations, part 2](https://lwn.net/Articles/327738/)
 - [Another union filesystem approach](https://lwn.net/Articles/403012/)
-  

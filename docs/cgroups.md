@@ -5,7 +5,7 @@ doesn't work well because a rogue container can eat up all the memory
 or file descriptors of the host system and thus bring everything
 down.
 
-We can use usual limits 
+We can use usual limits
 [getrlimit(2)](http://man7.org/linux/man-pages/man2/setrlimit.2.html)
 to achieve something but it is far from enough and brings issues
 because of UIDs mappings, capabilities and so on.
@@ -114,7 +114,7 @@ there are no processes running in that group.
 !!! seealso "Code"
     The cgroup and limits are set up after the `clone` when the pid of
     the container is known.
-    [diyc.c:198-237](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L198-L238)  
+    [diyc.c:204-262](https://github.com/w-vi/diyC/blob/master/src/diyc.c#L204-L262)
     [Example using diyc](diyc/usage#example-limit-memory-used-by-cgroups)
 
 
@@ -124,5 +124,3 @@ there are no processes running in that group.
 - [Linux kernel cgroups v2](https://www.kernel.org/doc/Documentation/cgroup-v2.txt)
 - [Control groups on Ubuntu Server Guide](https://help.ubuntu.com/lts/serverguide/cgroups.html)
 - [RHEL Resource Management Guide](https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/6/html/Resource_Management_Guide/ch01.html)
-  
-
