@@ -1,7 +1,7 @@
 /* diyc.c
 
    diyc - naive linux container runtime implementation
-   Copyright (C) 2017  Vilibald Wanča
+   Copyright (C) 2017, 2018  Vilibald Wanča
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
@@ -70,7 +70,7 @@ static char cwd[PATH_MAX + 1];
 
 /* Container representation */
 typedef struct container {
-    char id[IDLEN]; /* Name of the container */
+    char id[IDLEN + 1]; /* Name of the container */
     int pipe_fd[2];  /* Pipe used to synchronize parent and child */
     char **args; /* Container command and arguments */
     char path[PATH_MAX + 1]; /* Container fs directory  $(PWD)/containers/<id>*/
@@ -174,7 +174,10 @@ change_root(char *path)
     char newroot[PATH_MAX + 1];
 
     realpath(path, newroot);
-    snprintf(oldpath, PATH_MAX, "%s/.pivot_root", newroot);
+    if (snprintf(oldpath,
+                 PATH_MAX,
+                 "%s/.pivot_root",
+                 newroot) >= PATH_MAX) die("snprintf: pivot_root");
     realpath(oldpath, oldroot);
 
     LOG("CONTAINER| Calling pivot root");
@@ -184,8 +187,10 @@ change_root(char *path)
     /* Change to new root so we can safely remove the old root*/
     chdir("/");
 
-    if (copy_file("/.pivot_root/etc/resolv.conf", "/etc/resolv.conf") < 0) die("copy resolv.conf");
-    if (copy_file("/.pivot_root/etc/nsswitch.conf", "/etc/nsswitch.conf") < 0) die("copy nsswitch.conf");
+    if (copy_file("/.pivot_root/etc/resolv.conf",
+                  "/etc/resolv.conf") < 0) die("copy resolv.conf");
+    if (copy_file("/.pivot_root/etc/nsswitch.conf",
+                  "/etc/nsswitch.conf") < 0) die("copy nsswitch.conf");
 
     /* Unmount the old root and remove it so it is not accessible from
      * the container */
@@ -215,7 +220,11 @@ cgroup_setup(pid_t pid, unsigned int limit)
     if (mkdir(cgroup_dir, 0700) < 0 && errno != EEXIST) die("making cgroup");
 
     /* Maximum allowed memory for the container */
-    snprintf(cgroup_file, PATH_MAX, "%s/memory.limit_in_bytes", cgroup_dir);
+    if (snprintf(cgroup_file,
+                 PATH_MAX,
+                 "%s/memory.limit_in_bytes",
+                 cgroup_dir) >= PATH_MAX) die("snprintf: memory.limit_in_bytes");
+
 
     FILE *fp = fopen(cgroup_file, "w+");
     if (NULL == fp) die("Could not set memory limit");
@@ -223,17 +232,27 @@ cgroup_setup(pid_t pid, unsigned int limit)
     fclose(fp);
 
     /* No swap */
-    snprintf(cgroup_file, PATH_MAX, "%s/memory.memsw.limit_in_bytes", cgroup_dir);
+    if (snprintf(cgroup_file,
+                 PATH_MAX,
+                 "%s/memory.memsw.limit_in_bytes",
+                 cgroup_dir) >= PATH_MAX) die("snprintf: memory.memsw.limit_in_bytes");
 
-    if(access(cgroup_file, R_OK | W_OK) == 0) {
-      fp = fopen(cgroup_file, "w");
-      if (NULL == fp) die("Could not set swap limit");
-      fprintf(fp, "0\n");
-      fclose(fp);
+    if (access(cgroup_file, R_OK | W_OK) == 0) {
+
+        LOG("HOST| memory.memsw.limit_in_bytes not available in kernel, skipping");
+
+        fp = fopen(cgroup_file, "w");
+        if (NULL == fp) die("Could not set swap limit");
+        fprintf(fp, "0\n");
+        fclose(fp);
     }
 
     /* Add the container pid to the group */
-    snprintf(cgroup_file, PATH_MAX, "%s/cgroup.procs", cgroup_dir);
+    if (snprintf(cgroup_file,
+                 PATH_MAX,
+                 "%s/cgroup.procs",
+                 cgroup_dir) >= PATH_MAX) die("snprintf: cgroup.procs");
+
     fp = fopen(cgroup_file, "a");
     if (NULL == fp) die("Could not add proc to cgroup.procs");
     fprintf(fp, "%d\n", pid);
@@ -462,7 +481,11 @@ main(int argc, char *argv[])
     if (NULL == getcwd(cwd, PATH_MAX)) die("getcwd()");
 
     /* Directory where the container filesystem will reside */
-    snprintf(c.path, PATH_MAX, "%s/containers/%s", cwd, c.id);
+    if (snprintf(c.path,
+                 PATH_MAX,
+                 "%s/containers/%s",
+                 cwd,
+                 c.id) >= PATH_MAX) die("snprintft: path %s/containers/%s");
 
     LOG("HOST| Starting container %s using image %s", c.id, c.image);
 
