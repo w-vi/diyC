@@ -127,7 +127,7 @@
 doesn't work well because a rogue container can eat up all the memory
 or file descriptors of the host system and thus bring everything
 down.</p>
-<p>We can use usual limits 
+<p>We can use usual limits
 <a href="http://man7.org/linux/man-pages/man2/setrlimit.2.html">getrlimit(2)</a>
 to achieve something but it is far from enough and brings issues
 because of UIDs mappings, capabilities and so on.</p>
@@ -218,7 +218,7 @@ there are no processes running in that group.</p>
 <p class="admonition-title">Code</p>
 <p>The cgroup and limits are set up after the <code>clone</code> when the pid of
 the container is known.
-<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L198-L238">diyc.c:198-237</a><br />
+<a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L204-L262">diyc.c:204-262</a>
 <a href="diyc/usage#example-limit-memory-used-by-cgroups">Example using diyc</a></p>
 </div>
 <h2 id="more-to-read">More to read<a class="headerlink" href="#more-to-read" title="Permanent link">#</a></h2>

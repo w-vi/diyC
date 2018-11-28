@@ -240,14 +240,14 @@ get to keep access to the original old root so you can for example
 copy some configuration files to the new root.</p>
 <div class="admonition seealso">
 <p class="admonition-title">Code</p>
-<p>See the implementation in <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L311-L337">diy.c:311-337</a></p>
+<p>See the implementation in <a href="https://github.com/w-vi/diyC/blob/master/src/diyc.c#L335-L361">diy.c:335-361</a></p>
 </div>
 <p>Very similar behavior is also possible using completely different
 approaches, i.e utilizing subvolumes and snapshots
 of <a href="https://en.wikipedia.org/wiki/Btrfs">btrfs</a> or
 using <a href="https://en.wikipedia.org/wiki/Device_mapper">devicemapper</a>. Docker
 uses devicemapper approach on many systems by default and has a very
-good description of the 
+good description of the
 <a href="https://docs.docker.com/engine/userguide/storagedriver/device-mapper-driver/">devicemapper approach</a>.</p>
 <h2 id="unioning-filesystems-in-linux">Unioning filesystems in Linux<a class="headerlink" href="#unioning-filesystems-in-linux" title="Permanent link">#</a></h2>
 <p>Historically there were couple of options on Linux but only one of
