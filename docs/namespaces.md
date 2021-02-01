@@ -130,7 +130,7 @@ You can play with the namespaces in the shell too,
 [nsenter(1)](http://man7.org/linux/man-pages/man1/nsenter.1.html) is
 the command line equivalent
 of [setns(2)](http://man7.org/linux/man-pages/man2/setns.2.html)
-and [unshare(1)](http://man7.org/linux/man-pages/man2/unshare.1.html)
+and [unshare(1)](http://man7.org/linux/man-pages/man1/unshare.1.html)
 is the equivalent
 of [unshare(2)](http://man7.org/linux/man-pages/man2/unshare.2.html)
 syscall.
